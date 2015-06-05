@@ -26,3 +26,21 @@
 *.exe
 *.out
 *.app
+
+# Temp files
+*~
+.*~
+*.bak
+*.tmp
+
+# Eclipse project support
+.project
+.cproject
+.settings/
+
+# CMake centric suport - Generated content from CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+deploy
+Makefile
