@@ -61,7 +61,6 @@ using tthread::lock_guard;
 using tthread::atomic_thread_fence;
 using tthread::memory_order_acquire;
 using tthread::memory_order_release;
-using
 #else
 #include <mutex>
 using std::mutex;
