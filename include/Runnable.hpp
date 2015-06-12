@@ -51,7 +51,7 @@
 #include <functional>
 #include <exception>
 #include <memory>
-using std::shared_ptr;
+using std::auto_ptr;
 
 // Provide the hooks for the sleep() method abstraction...
 #if defined(_WIN32)
@@ -112,17 +112,19 @@ using std::atomic;
  * 		  learn to drive the full thing and DIY if more than that is needed.
  */
 
-typedef shared_ptr<thread> runable_thread;
+typedef auto_ptr<thread> runable_thread;
 
 class Runnable
 {
 public:
-	Runnable() {} ;
+	Runnable() : _thread(NULL) {} ;
     virtual ~Runnable()
     {
     	try
     	{
     		stop();
+    		join();
+    		delete _thread;
     	}
     	catch(std::exception& e)
     	{
@@ -159,7 +161,11 @@ public:
     	try
     	{
     		// Discard the thread, if any, and start a new one...
-    		_thread.reset(new thread(&Runnable::runThread, this));
+    		if (_thread != NULL)
+    		{
+    			delete _thread;
+    		}
+    		_thread = new thread(&Runnable::runThread, this);
     	}
     	catch (std::exception& e)
     	{
@@ -218,7 +224,7 @@ protected:
     virtual void run(void) = 0;		/* We **NEVER** want someone trying to instantiate this base class */
 
 private:
-    runable_thread _thread;
+    thread *_thread;
 
 };
 

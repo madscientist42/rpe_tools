@@ -53,6 +53,8 @@
 #define SINGLETON_HPP_
 
 #include <cassert>
+#include <memory>
+using std::auto_ptr;
 
 #if defined(USE_TINYTHREAD)
 #include "tinythread.h"
@@ -76,14 +78,23 @@ class Singleton
 {
 public:
 	Singleton() {}
-	~Singleton() { is_destructed = true; }
+	~Singleton()
+	{
+		is_destructed = true;
+		if (is_constructed)
+		{
+			delete GetInstance();		// Yes, yes, I *KNOW*.  Bad programmer, no twinkie...
+		}
+	}
 
 	static T* GetInstance()
 	{
 		static T *instance = NULL;
 
 		assert(!is_destructed);
+
 		(void)is_destructed; // prevent removing is_destructed in Release configuration
+		(void)is_constructed; // prevent removing is_constructed in Release configuration
 
 		if (instance == NULL)
 		{
@@ -94,7 +105,9 @@ public:
 			lock_guard<mutex> lock(GetMutex());
 			if (instance == NULL)
 			{
+				// Allocate and construct an instance of ourselves or our child...
 				instance = new T();
+				is_constructed = true;
 			}
 			atomic_thread_fence(memory_order_release);
 		}
@@ -103,6 +116,8 @@ public:
 
 private:
 	static bool is_destructed;
+	static bool is_constructed;
+
 	static mutex& GetMutex()
 	{
 		static mutex _mutex;
@@ -117,5 +132,7 @@ private:
 // call- as this might cause a very nasty race condition)
 template<class T>
 bool Singleton<T>::is_destructed = (Singleton<T>::GetMutex(), false);
+template<class T>
+bool Singleton<T>::is_constructed = (Singleton<T>::GetMutex(), false);
 
 #endif /* SINGLETON_HPP_ */
