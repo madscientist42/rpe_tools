@@ -53,8 +53,6 @@
 #define SINGLETON_HPP_
 
 #include <cassert>
-#include <memory>
-using std::auto_ptr;
 
 #if defined(USE_TINYTHREAD)
 #include "tinythread.h"

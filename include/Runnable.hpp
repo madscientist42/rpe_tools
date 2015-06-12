@@ -50,8 +50,6 @@
 
 #include <functional>
 #include <exception>
-#include <memory>
-using std::auto_ptr;
 
 // Provide the hooks for the sleep() method abstraction...
 #if defined(_WIN32)
@@ -112,7 +110,6 @@ using std::atomic;
  * 		  learn to drive the full thing and DIY if more than that is needed.
  */
 
-typedef auto_ptr<thread> runable_thread;
 
 class Runnable
 {
@@ -268,8 +265,7 @@ private:
 class OneShot
 {
 public:
-	OneShot() {} ;
-
+	OneShot() : _thread(NULL) {} ;
     OneShot(Runnable const&) = delete;
     OneShot& operator =(OneShot const&) = delete;
 
@@ -281,7 +277,11 @@ public:
     	{
     		// Discard the thread, if any (not likely- OneShot...), and start a new one,
     		// followed by arbitrarily detaching the same...
-    		_thread.reset(new thread(&OneShot::runThread, this));
+        	if (_thread != NULL)
+        	{
+        		delete _thread;
+        	}
+        	_thread = new thread(&OneShot::runThread, this);
     		_thread->detach();
     	}
     	catch (std::exception& e)
@@ -297,10 +297,17 @@ public:
 
 protected:
     virtual void run(void) = 0;		// We **NEVER** want someone trying to instantiate this class
-    virtual ~OneShot() {}				// We **NEVER** want an on-stack or global instance of this base or derivative.
+    virtual ~OneShot() 			    // We **NEVER** want an on-stack or global instance of this base or derivative.
+    {
+    	// However, we *DO* want it to clean up after itself...
+    	if (_thread != NULL)
+    	{
+    		delete _thread;
+    	}
+    }
 
 private:
-    runable_thread _thread;
+    thread *_thread;
 
 };
 
