@@ -58,10 +58,17 @@
 #include "tinythread.h"
 using tthread::mutex;
 using tthread::lock_guard;
+using tthread::atomic_thread_fence;
+using tthread::memory_order_acquire;
+using tthread::memory_order_release;
+using
 #else
 #include <mutex>
 using std::mutex;
 using std::lock_guard;
+using std::atomic_thread_fence;
+using std::memory_order_acquire;
+using std::memory_order_release;
 #endif
 
 template<class T>
@@ -73,17 +80,29 @@ public:
 
 	static T* GetInstance()
 	{
+		static T *instance = NULL;
+
 		assert(!is_destructed);
 		(void)is_destructed; // prevent removing is_destructed in Release configuration
 
-		lock_guard<mutex> lock(GetMutex());
-		static T instance;
-		return &instance;
+		if (instance == NULL)
+		{
+			// Bracket this with a memory fence to FORCE multiple threads on other CPUs
+			// will be in sync with each other and the check for NULL on the constructor
+			// allocation attempt will be only done by ONE thread.
+			atomic_thread_fence(memory_order_acquire);
+			lock_guard<mutex> lock(GetMutex());
+			if (instance == NULL)
+			{
+				instance = new T();
+			}
+			atomic_thread_fence(memory_order_release);
+		}
+		return instance;
 	}
 
 private:
 	static bool is_destructed;
-
 	static mutex& GetMutex()
 	{
 		static mutex _mutex;

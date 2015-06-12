@@ -9,6 +9,7 @@ set(LIBRARY_OUTPUT_PATH deploy)
 # Define some knobs that the users will want out of us...
 option(USE_TINYTRHEAD "Turn on included TinyThread++ support instead of the native C++11 support" FALSE)
 option(BUILD_DYNAMIC "Turn on dynamic (.so) building" TRUE)
+option(GCC_BUILD "Support GCC Atomics" TRUE)
 
 # Enforce C++11 semantics- RPE Tools are C++11 entities and require this.
 set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -std=c++11)
@@ -21,6 +22,9 @@ if(USE_TINYTRHEAD)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_TINYTHREAD")
     set(LIBRARY_SOURCES ${LIBRARY_SOURCES} src/tinythread.cpp)
 endif(USE_TINYTRHEAD)
+if(GCC_BUILD)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_TTHREAD_HAS_ATOMIC_BUILTINS_")
+endif(GCC_BUILD)
 
 # Set up the library proper...
 if(BUILD_DYNAMIC)

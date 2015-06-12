@@ -37,6 +37,7 @@
 .project
 .cproject
 .settings/
+.csettings/
 
 # CMake centric suport - Generated content from CMake
 CMakeCache.txt
@@ -44,3 +45,4 @@ CMakeFiles/
 cmake_install.cmake
 deploy
 Makefile
+

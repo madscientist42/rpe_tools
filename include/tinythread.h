@@ -430,6 +430,7 @@ class condition_variable {
     /// is woken by @c notify_one(), @c notify_all() or a spurious wake up.
     /// @param[in] aMutex A mutex that will be unlocked when the wait operation
     ///   starts, an locked again as soon as the wait operation is finished.
+    ///
     template <class _mutexT>
     inline void wait(_mutexT &aMutex)
     {
@@ -792,6 +793,43 @@ struct atomic {
 #endif // _TTHREAD_HAS_ATOMIC_BUILTINS_
     volatile T mValue;
 };
+
+// We're adding a few things to Tinythread++ here (FCE 06-11-15)
+//
+// We need to have a few memory barrier ops that are relevant to the
+// memory order enum that just simply WASN'T there.  We're going to
+// try to enforce the ordering behavior with GCC builtins if the
+//
+
+/// atomic_thread_fence()
+///
+/// This is a function call that institutes varying memory barriers
+/// within the stream of execution to allow atomics to work more
+/// cleanly and gracefully.
+///
+/// (NOTE: Tinythread++'s implementation currently does NOT support
+///        anything except a full memory barrier.)
+///
+void atomic_thread_fence(memory_order order = memory_order_seq_cst)
+{
+#ifdef _TTHREAD_HAS_ATOMIC_BUILTINS_
+	// We're going to be lazy here and just use a full fence.
+	// while the semantics of acquire and release barriers are
+	// available- they're not available on all targets this
+	// **MIGHT** be ran against right now.  Besides, a full
+	// fence will work for MOST conditions.  We're just going
+	// to accept and ignore the classes of mem access for this.
+	//
+	// FCE (06-11-15)
+	__sync_synchronize();
+#else
+	// Unfortunately, we don't have a lot of options here for
+	// this.  Without GCC's built-ins or C++11 options (Hey,
+	// this is to handle when it's NOT available or stable
+	// here...) there is *NO* currently portable way to institute
+	//
+#endif
+}
 
 typedef atomic<char>               atomic_char;   ///< Specialized atomic for type char.
 typedef atomic<signed char>        atomic_schar;  ///< Specialized atomic for type signed char.
