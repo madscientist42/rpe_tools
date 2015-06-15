@@ -810,7 +810,7 @@ struct atomic {
 /// (NOTE: Tinythread++'s implementation currently does NOT support
 ///        anything except a full memory barrier.)
 ///
-void atomic_thread_fence(memory_order order = memory_order_seq_cst)
+inline void atomic_thread_fence(memory_order order = memory_order_seq_cst)
 {
 #ifdef _TTHREAD_HAS_ATOMIC_BUILTINS_
 	// We're going to be lazy here and just use a full fence.
