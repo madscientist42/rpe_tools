@@ -84,6 +84,8 @@ public:
 		}
 	}
 
+	bool isConstructed() { return is_constructed; }
+
 	static T* GetInstance()
 	{
 		static T *instance = NULL;
