@@ -84,7 +84,7 @@ public:
 		}
 	}
 
-	bool isConstructed() { return is_constructed; }
+	static bool isConstructed() { return is_constructed; }
 
 	static T* GetInstance()
 	{
