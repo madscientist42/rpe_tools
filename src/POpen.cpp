@@ -52,6 +52,7 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <paths.h>
 #include <sys/stat.h>

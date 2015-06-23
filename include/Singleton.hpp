@@ -55,12 +55,20 @@
 #include <cassert>
 
 #if defined(USE_TINYTHREAD)
-#include "tinythread.h"
+#include <tinythread.h>
 using tthread::mutex;
 using tthread::lock_guard;
 using tthread::atomic_thread_fence;
 using tthread::memory_order_acquire;
 using tthread::memory_order_release;
+#elif defined (USE_BOOST)
+#include <boost/thread/mutex.hpp>
+using boost::mutex;
+using boost::lock_guard;
+#include <boost/atomic.hpp>
+using boost::atomic_thread_fence;
+using boost::memory_order_acquire;
+using boost::memory_order_release;
 #else
 #include <mutex>
 using std::mutex;

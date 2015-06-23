@@ -3,13 +3,15 @@
  *
  * This is a simplistic base class to provide some, but not all of the
  * functionality of Java's "Runnable" interface.  It utilizes a C++ 11
- * Standard compiler and operates off of the semantics of the same.
+ * Standard model/semantic and operates off of the semantics of the same.
  * We provide, as part of the implementation, the ability to use TinyThread
- * instead of the stdc++ implementation, in the event that your version on
- * your target is "broken" and does wrong things with this (and there
- * has been some C++ compilers that produced bad code for this...)
+ * or Boost::thread instead of the stdc++ implementation, in the event
+ * that your version on your target is "broken" and does wrong things
+ * with this (and there has been some C++ compilers that produced bad
+ * code for this over time...)
  *
- * This *requires* a 2011 C++ standard compliant compiler to compile and work.
+ * This code does not require the use of C++11 features to accomplish
+ * this even though it's use is the same of that.
  *
  * Copyright (c) 2013, 2014, 2015 Frank C. Earl
  * All Rights Reserved.
@@ -58,37 +60,69 @@
 #include <poll.h>
 #endif
 
+#if defined(USE_TINYTHREAD)
 /*
  * If we're told to use TinyThread, use it instead of the stdc++
  * implementation of things- in either case, as a simplification,
  * we add the using <foo> entries we and the users will most likely
  * need out of box.  Defining USE_TINYTHREAD implies that you have
  * this nice BSD licensed lib in your include file path.
+ *
+ * It works largely consistent with the C++11 standard way of
+ * doing things.  Boost, while C++11 was derived from it,
+ * is somewhat more complex to use.  We don't support BOOST
+ * for this object at this time because we want to keep the
+ * semantics largely the same.  (Had they not thought of
+ * "better" ways to do some of the things we support here,
+ * we might've supported this...
  */
-#if defined(USE_TINYTHREAD)
-#include "tinythread.h"
+#include <tinythread.h>
 using tthread::thread;
 using tthread::mutex;
 using tthread::recursive_mutex;
 using tthread::condition_variable;
 using tthread::lock_guard;
 using tthread::atomic;
+using tthread::this_thread::sleep_for;
+using tthread::this_thread::yield;
+using tthread::chrono::milliseconds;
 /* Since TinyThread fast mutexes are occasionally desired, we're
  * adding them as well...
  */
 #include "fast_mutex.h"
 using tthread::fast_mutex;
+#elif defined(USE_BOOST)
+/*
+ * If Boost was defined and the user didn't specify TinyThread++, we should use it instead-
+ * not everyone wants/needs to use C++11.  As this is intended to simplify development
+ * on a wide range of targets which may not have compatible/compliant compilers for
+ * C++11 or beyond.
+ */
+#include <boost/thread.hpp>
+using boost::thread;
+using boost::mutex;
+using boost::recursive_mutex;
+using boost::condition_variable;
+using boost::lock_guard;
+using boost::atomic;
+using boost::this_thread::sleep_for;
+using boost::this_thread::yield;
+using boost::chrono::milliseconds;
 #else
 #include <thread>
 #include <mutex>
 #include <condition_variable>
 #include <atomic>
+#include <chrono>
 using std::thread;
 using std::mutex;
 using std::recursive_mutex;
 using std::condition_variable;
 using std::lock_guard;
 using std::atomic;
+using std::this_thread::sleep_for;
+using std::this_thread::yield;
+using std::chrono::milliseconds;
 #endif
 
 #include <stdio.h>
@@ -129,8 +163,7 @@ public:
     	}
     }
 
-    Runnable(Runnable const&) = delete;
-    Runnable& operator =(Runnable const&) = delete;
+
 
     void join()
     {
@@ -174,25 +207,12 @@ public:
     // slept as the passed in parameter.  While it's not strictly part of
     // the Runnable interface, we're providing it so that the semantics are
     // there and a developer doesn't have to think about, "Am I on Windows or Linux?"
-    // and having to figure out how to get the right behavior...  We don't
+    // or the like and having to figure out how to get the right behavior...  We don't
     // do the other version that does (msec, nsec) right at this time because
     // it's rather specialized and only kind-of maps to the other world.
     void sleep(int msDuration)
     {
-#if defined(_WIN32)
-    	// Windows does it's own thing for millsecond sleeps...
-    	Sleep(msDuration);
-#else
-    	// Blindly presume that the rest complies with POSIX on a poll()
-    	// call - should be correct for *BSD, Linux, etc. for this purpose
-    	// since the behavior existed since time immemorial on the call...
-    	//
-    	// An empty poll constitutes a millsecond sleep if you supply a timeout.
-    	// (One could use usleep() on fully POSIX compliant systems, but this
-    	//  is actually more portable because it'll work where usleep isn't
-    	//  available...)
-    	poll(NULL, 0, msDuration);
-#endif
+    	sleep_for(milliseconds(msDuration));
     }
 
     // Provide the notion of yield() in the class as a convenience method.
@@ -203,11 +223,7 @@ public:
     // we provide it as an inline here...
     inline void yield(void)
     {
-#if defined(USE_TINYTHREAD)
-    	tthread::this_thread::yield();
-#else
-    	std::this_thread::yield();
-#endif
+    	yield();
     };
 
     // Sidestep a screwball problem with some implementations of the C++11 standard
@@ -223,6 +239,14 @@ protected:
 private:
     thread *_thread;
 
+    // We don't want these being able to be used by a user...since this wrapper can be
+    // used by any setup/config that provides MOST of the C++11 semantics, but can't
+    // require C++11 in it's use, we can't use the "= delete;" construct in declaration
+    // to effectively do that- so we make  it private and largely do nothing.
+    //
+    // FCE (06-22-16)
+    Runnable(Runnable const&) : _thread(NULL) { }
+    Runnable& operator =(Runnable const&) { return *this; }
 };
 
 /*
@@ -266,8 +290,6 @@ class OneShot
 {
 public:
 	OneShot() : _thread(NULL) {} ;
-    OneShot(Runnable const&) = delete;
-    OneShot& operator =(OneShot const&) = delete;
 
     // Note: If you call start() on an instance of this, it no longer
     // belongs to *ANYONE* except itself- this SELF-DESTRUCTS!
@@ -309,6 +331,14 @@ protected:
 private:
     thread *_thread;
 
+    // We don't want these being able to be used by a user...since this wrapper can be
+    // used by any setup/config that provides MOST of the C++11 semantics, but can't
+    // require C++11 in it's use, we can't use the "= delete;" construct in declaration
+    // to effectively do that- so we make  it private and largely do nothing.
+    //
+    // FCE (06-22-16)
+    OneShot(OneShot const&) : _thread(NULL) { }
+    OneShot& operator =(OneShot const&) { return *this; }
 };
 
 #endif // RUNABLE_H
