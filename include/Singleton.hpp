@@ -108,8 +108,8 @@ public:
 			// Bracket this with a memory fence to FORCE multiple threads on other CPUs
 			// will be in sync with each other and the check for NULL on the constructor
 			// allocation attempt will be only done by ONE thread.
-			atomic_thread_fence(memory_order_acquire);
 			lock_guard<mutex> lock(GetMutex());
+			atomic_thread_fence(memory_order_acquire);
 			if (instance == NULL)
 			{
 				// Allocate and construct an instance of ourselves or our child...
