@@ -125,6 +125,8 @@ using std::this_thread::yield;
 using std::chrono::milliseconds;
 #endif
 
+#include <NONCOPY.hpp>
+
 #include <stdio.h>
 
 /*
@@ -145,7 +147,7 @@ using std::chrono::milliseconds;
  */
 
 
-class Runnable
+class Runnable : public NONCOPY
 {
 public:
 	Runnable() : _thread(NULL) {} ;

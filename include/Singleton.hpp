@@ -78,8 +78,9 @@ using std::memory_order_acquire;
 using std::memory_order_release;
 #endif
 
-template<class T>
-class Singleton
+#include <NONCOPY.hpp>
+
+template<class T> class Singleton : public NONCOPY 
 {
 public:
 	Singleton() {}
