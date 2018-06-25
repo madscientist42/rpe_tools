@@ -1,3 +1,6 @@
+#if !defined(__NONCOPY_HPP)
+#define __NONCOPY_HPP
+
 class NONCOPY
 {
 protected:
@@ -9,3 +12,6 @@ private:
    NONCOPY(NONCOPY&&)                 = delete;
    NONCOPY& operator=(NONCOPY&&)      = delete;
 };
+
+#endif
+
