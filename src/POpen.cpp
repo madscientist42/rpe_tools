@@ -60,7 +60,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "POpen.h"
+#include <POpen.hpp>
 
 int POpen::run_command(string command)
 {
