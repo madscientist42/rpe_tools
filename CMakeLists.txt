@@ -16,6 +16,20 @@ option(USE_BOOST "Turn on BOOST support" TRUE)
 # don't need to link to this under all circumstances.
 set(LIBRARY_SOURCES src/POpen.cpp)
 
+# IF you've got Linux...we have a bit of GPIO magic to work with
+# as well...so add it to the library sources when CMake detects
+# Linux as a build target...
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    option(PROVIDE_SysFSGPIO "Turn on SysFSGPIO support" FALSE)
+endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+
+if(PROVIDE_SysFSGPIO)
+	set(LIBRARY_SOURCES ${LIBRARY_SOURCES} src/SysFSGPIO.cpp)
+endif(PROVIDE_SysFSGPIO)
+
+# Force C++ 11 support...
+set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -std=c++11)
+
 # Set the ground rules for files being linked, as needed...
 find_package (Threads)
 
