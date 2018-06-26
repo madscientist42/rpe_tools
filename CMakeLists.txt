@@ -27,8 +27,12 @@ if(PROVIDE_SysFSGPIO)
 	set(LIBRARY_SOURCES ${LIBRARY_SOURCES} src/SysFSGPIO.cpp)
 endif(PROVIDE_SysFSGPIO)
 
-# Force C++ 11 support...
-set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+# Force C++ 11 support if you don't have USE_BOOST 
+# turned on- the library can work with it, but you 
+# don't need it if BOOST is leveraged.
+if (NOT USE_BOOST)
+	set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+endif (NOT USE_BOOST)
 
 # Set the ground rules for files being linked, as needed...
 find_package (Threads)
