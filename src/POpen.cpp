@@ -13,7 +13,7 @@
  *
  * This *requires* a 2011 C++ standard compliant compiler to compile and work.
  *
- * Copyright (c) 2013, 2014, 2015 Frank C. Earl
+ * Copyright (c) 2013, 2014, 2015, 2018 Frank C. Earl
  * All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
