@@ -28,7 +28,7 @@ if(PROVIDE_SysFSGPIO)
 endif(PROVIDE_SysFSGPIO)
 
 # Force C++ 11 support...
-set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -std=c++11)
+set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 
 # Set the ground rules for files being linked, as needed...
 find_package (Threads)
