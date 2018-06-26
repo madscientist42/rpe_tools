@@ -65,7 +65,7 @@ typedef enum
 {
 	IN,
 	OUT,
-	INVALID
+	NO_DIR
 } Direction;
 
 // Value, used to help code specify signal HIGH/LOW...

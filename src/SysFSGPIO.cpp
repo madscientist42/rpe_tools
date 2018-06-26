@@ -63,7 +63,7 @@ const ssize_t MAX_BUF = 2;
 SysFSGPIO::SysFSGPIO() :
 		_id(0),
 		_id_str(""),
-		_direction(Direction::INVALID),
+		_direction(Direction::NO_DIR),
 		_edge(Edge::NONE),
 		_fd(-1)
 {
@@ -263,7 +263,7 @@ Value SysFSGPIO::getValue(void)
 	// to READ and for Callbacks.  If so, you're not supposed to read the GPIO line via
 	// getValue() (It's handed to you in the callback...)
 	Value retVal = Value::INVALID;
-	if ((_edge == Edge::NONE) && (_direction != Direction::INVALID))
+	if ((_edge == Edge::NONE) && (_direction != Direction::NO_DIR))
 	{
 		// Edge has to be NONE if it's a valid mode for us...
 		std::ifstream sysfs_value(_sysfsPath + "gpio" + _id_str + "/value");
@@ -305,7 +305,7 @@ Value SysFSGPIO::setValue(Value value)
 	// what we attempted to set if it's good...
 	Value retVal = Value::INVALID;
 
-	if ((_edge == Edge::NONE) && (_direction != Direction::INVALID))
+	if ((_edge == Edge::NONE) && (_direction != Direction::NO_DIR))
 	{
 		// Edge has to be NONE if it's a valid mode for us...
 		retVal = value;
