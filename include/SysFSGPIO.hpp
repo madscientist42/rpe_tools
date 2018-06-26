@@ -64,7 +64,8 @@ using std::string;
 typedef enum
 {
 	IN,
-	OUT
+	OUT,
+	INVALID
 } Direction;
 
 // Value, used to help code specify signal HIGH/LOW...
@@ -90,49 +91,53 @@ typedef function<void(Value)> CallbackFunction;
 class SysFSGPIO: public Runnable
 {
 public:
-	// In/Out constructor without an event callback for input...
-	SysFSGPIO(uint16_t id, Direction direction);
+    // Having to make a default constructor- if you want to use SharedReference,
+    // you HAVE to.  (SIGH...)
+    SysFSGPIO();
 
-	// In constructor with an event callback for input...  Destructor **MUST** unwind the
-	// callback thread when it's this case...
-	SysFSGPIO(uint16_t id, Edge edge, CallbackFunction callback);
+    // In/Out constructor without an event callback for input...
+    SysFSGPIO(uint16_t id, Direction direction);
 
-	// Destructor...should correctly unwind unless something catastrophic happens...
-	virtual ~SysFSGPIO();
+    // In constructor with an event callback for input...  Destructor **MUST** unwind the
+    // callback thread when it's this case...
+    SysFSGPIO(uint16_t id, Edge edge, CallbackFunction callback);
 
-	// Get my value...if a callback is set on us, we return INVALID.
-	// (You're supposed to use the callback's return... )
-	Value getValue(void);
+    // Destructor...should correctly unwind unless something catastrophic happens...
+    virtual ~SysFSGPIO();
 
-	// Set my value...returns value or invalid...
-	Value setValue(Value value);
+    // Get my value...if a callback is set on us, we return INVALID.
+    // (You're supposed to use the callback's return... )
+    Value getValue(void);
 
-	// Get my ID...
-	uint16_t getID(void) { return _id; }
+    // Set my value...returns value or invalid...
+    Value setValue(Value value);
+
+    // Get my ID...
+    uint16_t getID(void) { return _id; }
 
 protected:
-	virtual void run(void);
+    virtual void run(void);
 
 private:
-	// The generic path into the sysfs GPIO class edge...
-	static const string  _sysfsPath;
+    // The generic path into the sysfs GPIO class edge...
+    static const string  _sysfsPath;
 
-	// MY GPIO's internal params...
-	uint16_t 				_id;			// What's the GPIO number for this object?
-	string					_id_str;		// String version of the GPIO number...
-	Direction   			_direction;		// What direction was set on init?
-	Edge					_edge;			// What (optional) edge was set on init?
-	CallbackFunction		_callback;		// Did we have a callback set on us?
-	int						_fd;			// Is there an FD opened against this GPIO?
+    // MY GPIO's internal params...
+    uint16_t 				_id;			// What's the GPIO number for this object?
+    string					_id_str;		// String version of the GPIO number...
+    Direction   			_direction;		// What direction was set on init?
+    Edge					_edge;			// What (optional) edge was set on init?
+    CallbackFunction		_callback;		// Did we have a callback set on us?
+    int						_fd;			// Is there an FD opened against this GPIO?
 
-	// Export out GPIO...
-	void exportGPIO(void);
+    // Export out GPIO...
+    void exportGPIO(void);
 
-	// Unexport the GPIO
-	void unexportGPIO(void);
+    // Unexport the GPIO
+    void unexportGPIO(void);
 
-	// Quick, NASTY way to check if a path exists...
-	bool PathExists( const std::string &Pathname ) { return access( Pathname.c_str(), 0 ) == 0;	};
+    // Quick, NASTY way to check if a path exists...
+    bool PathExists( const std::string &Pathname ) { return access( Pathname.c_str(), 0 ) == 0;	};
 };
 
 #endif // #if defined(__linux__)
