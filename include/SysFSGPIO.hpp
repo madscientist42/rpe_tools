@@ -1,4 +1,4 @@
- /*
+/*
  * SysFSGPIO.hpp
  *
  * A Linux SysFS GPIO abstraction for C++
@@ -64,7 +64,8 @@ using std::string;
 typedef enum
 {
 	IN,
-	OUT
+	OUT,
+	NO_DIR
 } Direction;
 
 // Value, used to help code specify signal HIGH/LOW...
@@ -90,6 +91,10 @@ typedef function<void(Value)> CallbackFunction;
 class SysFSGPIO: public Runnable
 {
 public:
+	// Having to make a default constructor- if you want to use SharedReference,
+	// you HAVE to.  (SIGH...)
+	SysFSGPIO();
+
 	// In/Out constructor without an event callback for input...
 	SysFSGPIO(uint16_t id, Direction direction, bool useActiveLow = false);
 
