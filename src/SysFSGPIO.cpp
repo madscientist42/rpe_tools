@@ -164,8 +164,10 @@ SysFSGPIO::~SysFSGPIO()
 {
 	if (isRunning())
 	{
-		// Thread's running...kill it...
+		// If we're running stop, join, clear our thread...
 		stop();
+		join();
+		if (NULL != _thread) delete _thread;
 	}
 
 	if (_fd > -1)
@@ -231,7 +233,7 @@ void SysFSGPIO::exportGPIO(void)
        std::ofstream sysfs_activelow(_sysfsPath + "gpio" + _id_str + "/active_low", std::ofstream::app);
        if( !sysfs_activelow.is_open() )
        {
-          throw std::runtime_error("Unable to clear active_low for GPIO " + _id_str);
+          throw std::runtime_error("Unable to set active_low for GPIO " + _id_str);
        }
        if (_activeLow)
        {
@@ -303,7 +305,7 @@ Value SysFSGPIO::getValue(void)
 			break;
 
 		default:
-			// Do Nothing...
+			retVal = Value::INVALID;
 			break;
 		}
 	}
@@ -363,9 +365,9 @@ void SysFSGPIO::run(void)
 	// Presume it's all properly set up and we're going to go live with callbacks...
 	while (_run)
 	{
-		// Set up a poll() call...  We're going to be setting timeouts (1 second) on this
-		// so we don't have to do idiot things to allow the thread to be breakable.
-		if( 1 == poll(fdset, 2, 1000) )
+		// Set up a poll() call...
+		int pollRet = poll(fdset, 1, -1);
+		if( 1 == pollRet )
 		{
 			if(fdset[0].revents & POLLPRI)
 			{
@@ -397,6 +399,8 @@ void SysFSGPIO::run(void)
 					val = Value::INVALID;
 					break;
 				}
+
+				std::cout << "running _callback(" << val << ", " << _data << ")" << std::endl;
 
 				// Call our callback function with the value and possible pointer to data/object.  Call-ee MUST return.
 				_callback(val, _data);

@@ -150,7 +150,7 @@ using std::chrono::milliseconds;
 class Runnable : public NONCOPY
 {
 public:
-	Runnable() : _thread(NULL) {} ;
+	Runnable() : _thread(NULL), _run(false) {} ;
     virtual ~Runnable()
     {
     	try
@@ -164,8 +164,6 @@ public:
     		printf("Runnable : %s\n", e.what());
     	}
     }
-
-
 
     void join()
     {
@@ -235,20 +233,11 @@ public:
     bool isRunning (void ) {return _run;}
 
 protected:
-    atomic<bool> _run;
+    thread *		_thread;
+    atomic<bool> 	_run;
+
     virtual void run(void) = 0;		/* We **NEVER** want someone trying to instantiate this base class */
 
-private:
-    thread *_thread;
-
-    // We don't want these being able to be used by a user...since this wrapper can be
-    // used by any setup/config that provides MOST of the C++11 semantics, but can't
-    // require C++11 in it's use, we can't use the "= delete;" construct in declaration
-    // to effectively do that- so we make  it private and largely do nothing.
-    //
-    // FCE (06-22-16)
-    Runnable(Runnable const&) : _thread(NULL) { }
-    Runnable& operator =(Runnable const&) { return *this; }
 };
 
 /*
@@ -288,7 +277,7 @@ private:
  * here, USE Runnable INSTEAD.
  *
  */
-class OneShot
+class OneShot : public NONCOPY
 {
 public:
 	OneShot() : _thread(NULL) {} ;
@@ -331,16 +320,8 @@ protected:
     }
 
 private:
-    thread *_thread;
+    thread *_thread;	// Unlike Runnable, we don't want the ability for children to see this.
 
-    // We don't want these being able to be used by a user...since this wrapper can be
-    // used by any setup/config that provides MOST of the C++11 semantics, but can't
-    // require C++11 in it's use, we can't use the "= delete;" construct in declaration
-    // to effectively do that- so we make  it private and largely do nothing.
-    //
-    // FCE (06-22-16)
-    OneShot(OneShot const&) : _thread(NULL) { }
-    OneShot& operator =(OneShot const&) { return *this; }
 };
 
 #endif // RUNABLE_H
