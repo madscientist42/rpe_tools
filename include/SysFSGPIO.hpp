@@ -91,11 +91,11 @@ class SysFSGPIO: public Runnable
 {
 public:
 	// In/Out constructor without an event callback for input...
-	SysFSGPIO(uint16_t id, Direction direction);
+	SysFSGPIO(uint16_t id, Direction direction, bool useActiveLow = false);
 
 	// In constructor with an event callback for input...  Destructor **MUST** unwind the
 	// callback thread when it's this case...
-	SysFSGPIO(uint16_t id, Edge edge, CallbackFunction callback);
+	SysFSGPIO(uint16_t id, Edge edge, CallbackFunction callback, bool useActiveLow = false);
 
 	// Destructor...should correctly unwind unless something catastrophic happens...
 	virtual ~SysFSGPIO();
@@ -124,6 +124,7 @@ private:
 	Edge					_edge;			// What (optional) edge was set on init?
 	CallbackFunction		_callback;		// Did we have a callback set on us?
 	int						_fd;			// Is there an FD opened against this GPIO?
+	bool					_activeLow;		// Are we set active low?
 
 	// Export out GPIO...
 	void exportGPIO(void);

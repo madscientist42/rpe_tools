@@ -60,24 +60,26 @@ const std::string SysFSGPIO::_sysfsPath("/sys/class/gpio/");
 
 const ssize_t MAX_BUF = 2;
 
-SysFSGPIO::SysFSGPIO(uint16_t id, Direction direction) :
+SysFSGPIO::SysFSGPIO(uint16_t id, Direction direction, bool useActiveLow) :
 		_id(id),
 		_id_str(std::to_string(id)),
 		_direction(direction),
 		_edge(Edge::NONE),
-		_fd(-1)
+		_fd(-1),
+		_activeLow(useActiveLow)
 {
 	// Simple.  Export out the GPIO with the specified direction...  There's few cleanups to be done...
 	exportGPIO();
 }
 
-SysFSGPIO::SysFSGPIO(uint16_t id, Edge edge, CallbackFunction callback) :
+SysFSGPIO::SysFSGPIO(uint16_t id, Edge edge, CallbackFunction callback, bool useActiveLow) :
 		_id(id),
 		_id_str(std::to_string(id)),
 		_direction(Direction::IN),
 		_edge(edge),
 		_fd(-1),
-		_callback(callback)
+		_callback(callback),
+		_activeLow(useActiveLow)
 {
 	char buf[MAX_BUF];
 
@@ -210,19 +212,26 @@ void SysFSGPIO::exportGPIO(void)
 		sysfs_direction.close();
     }
 
-    //attempt to clear active low
+    // Attempt to set active low - Some things we want signal high to be "off" (Like LEDs)
     {
        std::ofstream sysfs_activelow(_sysfsPath + "gpio" + _id_str + "/active_low", std::ofstream::app);
        if( !sysfs_activelow.is_open() )
        {
           throw std::runtime_error("Unable to clear active_low for GPIO " + _id_str);
        }
-       sysfs_activelow << "0";
+       if (_activeLow)
+       {
+    	   sysfs_activelow << "1";
+       }
+       else
+       {
+    	   sysfs_activelow << "0";
+       }
        sysfs_activelow.close();
     }
 
     // Initially set the value to low on the line to start inbound or to clear the value on
-    // outbound...
+    // outbound...set it "off"...
 	{
 		std::ofstream sysfs_value(_sysfsPath + "gpio" + _id_str + "/value", std::ofstream::app);
 		if( !sysfs_value.is_open() )
