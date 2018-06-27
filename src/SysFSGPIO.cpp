@@ -67,6 +67,7 @@ SysFSGPIO::SysFSGPIO() :
 		_direction(Direction::NO_DIR),
 		_edge(Edge::NONE),
 		_fd(-1),
+		_data(NULL),
 		_activeLow(false)
 {
 }
@@ -77,19 +78,21 @@ SysFSGPIO::SysFSGPIO(uint16_t id, Direction direction, bool useActiveLow) :
 		_direction(direction),
 		_edge(Edge::NONE),
 		_fd(-1),
+		_data(NULL),
 		_activeLow(useActiveLow)
 {
 	// Simple.  Export out the GPIO with the specified direction...  There's few cleanups to be done...
 	exportGPIO();
 }
 
-SysFSGPIO::SysFSGPIO(uint16_t id, Edge edge, CallbackFunction callback, bool useActiveLow) :
+SysFSGPIO::SysFSGPIO(uint16_t id, Edge edge, CallbackFunction callback, void *data, bool useActiveLow) :
 		_id(id),
 		_id_str(std::to_string(id)),
 		_direction(Direction::IN),
 		_edge(edge),
 		_fd(-1),
 		_callback(callback),
+		_data(data),
 		_activeLow(useActiveLow)
 {
 	char buf[MAX_BUF];
@@ -395,8 +398,8 @@ void SysFSGPIO::run(void)
 					break;
 				}
 
-				// Call our callback function with the value.  Call-ee MUST return.
-				_callback(val);
+				// Call our callback function with the value and possible pointer to data/object.  Call-ee MUST return.
+				_callback(val, _data);
 			}
 		}
 	}

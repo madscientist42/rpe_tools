@@ -85,7 +85,7 @@ typedef enum
 	BOTH
 } Edge;
 
-typedef function<void(Value)> CallbackFunction;
+typedef function<void(Value, void*)> CallbackFunction;
 
 
 class SysFSGPIO: public Runnable
@@ -100,7 +100,7 @@ public:
 
 	// In constructor with an event callback for input...  Destructor **MUST** unwind the
 	// callback thread when it's this case...
-	SysFSGPIO(uint16_t id, Edge edge, CallbackFunction callback, bool useActiveLow = false);
+	SysFSGPIO(uint16_t id, Edge edge, CallbackFunction callback, void *data = NULL, bool useActiveLow = false);
 
 	// Destructor...should correctly unwind unless something catastrophic happens...
 	virtual ~SysFSGPIO();
@@ -129,6 +129,7 @@ private:
 	Edge					_edge;			// What (optional) edge was set on init?
 	CallbackFunction		_callback;		// Did we have a callback set on us?
 	int						_fd;			// Is there an FD opened against this GPIO?
+	void *					_data;			// Generic pointer to data that can be passed to the callback.
 	bool					_activeLow;		// Are we set active low?
 
 	// Export out GPIO...
