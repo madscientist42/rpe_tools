@@ -193,7 +193,16 @@ public:
     		// Discard the thread, if any, and start a new one...
     		if (_thread != NULL)
     		{
-    			delete _thread;
+    	    	try
+    	    	{
+					stop();
+					join();
+					delete _thread;
+    	    	}
+    	    	catch(std::exception& e)
+    	    	{
+    	    		printf("Runnable : %s\n", e.what());
+    	    	}
     		}
     		_thread = new thread(&Runnable::runThread, this);
     	}
@@ -228,7 +237,12 @@ public:
 
     // Sidestep a screwball problem with some implementations of the C++11 standard
     // threading interfaces...
-    static void runThread(void *arg) { ((Runnable *)arg)->_run = true; ((Runnable *)arg)->run(); }
+    static void runThread(void *arg)
+    {
+    	((Runnable *)arg)->_run = true;
+    	((Runnable *)arg)->run();
+    	((Runnable *)arg)->_run = false;
+    }
 
     bool isRunning (void ) {return _run;}
 
@@ -292,7 +306,14 @@ public:
     		// followed by arbitrarily detaching the same...
         	if (_thread != NULL)
         	{
-        		delete _thread;
+        		try
+        		{
+            		delete _thread;
+        		}
+            	catch (std::exception& e)
+            	{
+            		printf("OneShot : %s\n", e.what());
+            	}
         	}
         	_thread = new thread(&OneShot::runThread, this);
     		_thread->detach();
