@@ -400,8 +400,6 @@ void SysFSGPIO::run(void)
 					break;
 				}
 
-				std::cout << "running _callback(" << val << ", " << _data << ")" << std::endl;
-
 				// Call our callback function with the value and possible pointer to data/object.  Call-ee MUST return.
 				_callback(val, _data);
 			}
