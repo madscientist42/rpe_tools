@@ -75,4 +75,4 @@ target_link_libraries(TestRPE rpetools ${TEST_APP_LIBS} ${CMAKE_THREAD_LIBS_INIT
 
 # Set up install rules...
 install(TARGETS rpetools DESTINATION lib)
-install(DIRECTORY include DESTINATION include)
+install(DIRECTORY include DESTINATION .)
