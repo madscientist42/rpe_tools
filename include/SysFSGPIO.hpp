@@ -57,6 +57,7 @@ using std::function;
 
 #include <string>
 using std::string;
+using std::to_string;
 
 // Helpful typedefs...
 
@@ -115,6 +116,13 @@ public:
 	// Get my ID...
 	uint16_t getID(void) { return _id; }
 
+	// Check for seeing if a designated chip entry for our GPIOs is even THERE.
+	static bool checkForGPIOChip(uint16_t _id)
+	{
+		string gpiochipPath = _sysfsPath + "gpiochip" + to_string(_id);
+		return PathExists(gpiochipPath);
+	};
+
 protected:
 	virtual void run(void);
 
@@ -139,7 +147,7 @@ private:
 	void unexportGPIO(void);
 
 	// Quick, NASTY way to check if a path exists...
-	bool PathExists( const std::string &Pathname ) { return access( Pathname.c_str(), 0 ) == 0;	};
+	static bool PathExists( const std::string &Pathname ) { return access( Pathname.c_str(), 0 ) == 0;	};
 };
 
 #endif // #if defined(__linux__)
