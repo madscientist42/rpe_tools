@@ -139,6 +139,7 @@ private:
 	int						_fd;			// Is there an FD opened against this GPIO?
 	void *					_data;			// Generic pointer to data that can be passed to the callback.
 	bool					_activeLow;		// Are we set active low?
+	bool                    _doTeardown;    // Was the GPIO config there before we came into existence?
 
 	// Export out GPIO...
 	void exportGPIO(void);

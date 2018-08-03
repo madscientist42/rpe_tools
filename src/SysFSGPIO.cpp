@@ -68,7 +68,8 @@ SysFSGPIO::SysFSGPIO() :
 		_edge(Edge::NONE),
 		_fd(-1),
 		_data(NULL),
-		_activeLow(false)
+		_activeLow(false),
+		_doTeardown(true)
 {
 }
 
@@ -79,7 +80,8 @@ SysFSGPIO::SysFSGPIO(uint16_t id, Direction direction, bool useActiveLow) :
 		_edge(Edge::NONE),
 		_fd(-1),
 		_data(NULL),
-		_activeLow(useActiveLow)
+		_activeLow(useActiveLow),
+		_doTeardown(true)
 {
 	// Simple.  Export out the GPIO with the specified direction...  There's few cleanups to be done...
 	exportGPIO();
@@ -93,7 +95,8 @@ SysFSGPIO::SysFSGPIO(uint16_t id, Edge edge, CallbackFunction callback, void *da
 		_fd(-1),
 		_callback(callback),
 		_data(data),
-		_activeLow(useActiveLow)
+		_activeLow(useActiveLow),
+		_doTeardown(true)		
 {
 	char buf[MAX_BUF];
 
@@ -187,12 +190,23 @@ void SysFSGPIO::exportGPIO(void)
     {
        throw std::runtime_error(_sysfsPath + " does not exist.");
     }
-
-    // We're not going to be fancy...either this works right or we throw an exception
-    // indicating that we couldn't get the GPIO generated- and we CAN ask that question
-    // quicker than trying to guess whether we have a valid GPIO ID in hand....
-    // attempt to export
+    
+    // Check to see if the GPIO entry was there to begin with.  We'll 
+    // set it the specified way, but if it was lit...leave it be.
+    // (This may be "wrong" but it lets us do things like LEDs, etc. 
+    // with multiple "controllers" and do them "right" all the same...)
+	if (!PathExists(_sysfsPath + "gpio" + _id_str))
 	{
+	    // It exists before any other steps, so skip the start-up steps
+	    // and move to the config and declare it not needing to be torn down.
+	    _doTeardown = false;
+	}
+	else
+	{
+        // We're not going to be fancy...either this works right or we throw an exception
+        // indicating that we couldn't get the GPIO generated- and we CAN ask that question
+        // quicker than trying to guess whether we have a valid GPIO ID in hand....
+        // attempt to export
 		std::ofstream sysfs_export(_sysfsPath + "export", std::ofstream::app);
 		if( !sysfs_export.is_open() )
 		{
@@ -207,7 +221,7 @@ void SysFSGPIO::exportGPIO(void)
 			throw std::runtime_error("Unable to export GPIO(2) " + _id_str);
 		}
 	}
-
+	
     //attempt to set direction
     {
 		std::ofstream sysfs_direction(_sysfsPath + "gpio" + _id_str + "/direction", std::ofstream::app);
@@ -262,6 +276,8 @@ void SysFSGPIO::exportGPIO(void)
 
 void SysFSGPIO::unexportGPIO(void)
 {
+    // Unexport only when we constructed it ourselves at our code level...
+    if (_doTeardown)
 	{
 		std::ofstream sysfs_export(_sysfsPath + "unexport", std::ofstream::app);
 		if( !sysfs_export.is_open() )
