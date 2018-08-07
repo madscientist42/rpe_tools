@@ -195,7 +195,7 @@ void SysFSGPIO::exportGPIO(void)
     // set it the specified way, but if it was lit...leave it be.
     // (This may be "wrong" but it lets us do things like LEDs, etc. 
     // with multiple "controllers" and do them "right" all the same...)
-	if (!PathExists(_sysfsPath + "gpio" + _id_str))
+	if (PathExists(_sysfsPath + "gpio" + _id_str))
 	{
 	    // It exists before any other steps, so skip the start-up steps
 	    // and move to the config and declare it not needing to be torn down.
