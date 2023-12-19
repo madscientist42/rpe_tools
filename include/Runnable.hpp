@@ -47,8 +47,7 @@
  *
  */
 
-#ifndef RUNABLE_H
-#define RUNABLE_H
+#pragma once
 
 #include <functional>
 #include <exception>
@@ -60,55 +59,6 @@
 #include <poll.h>
 #endif
 
-#if defined(USE_TINYTHREAD)
-/*
- * If we're told to use TinyThread, use it instead of the stdc++
- * implementation of things- in either case, as a simplification,
- * we add the using <foo> entries we and the users will most likely
- * need out of box.  Defining USE_TINYTHREAD implies that you have
- * this nice BSD licensed lib in your include file path.
- *
- * It works largely consistent with the C++11 standard way of
- * doing things.  Boost, while C++11 was derived from it,
- * is somewhat more complex to use.  We don't support BOOST
- * for this object at this time because we want to keep the
- * semantics largely the same.  (Had they not thought of
- * "better" ways to do some of the things we support here,
- * we might've supported this...
- */
-#include <tinythread.h>
-using tthread::thread;
-using tthread::mutex;
-using tthread::recursive_mutex;
-using tthread::condition_variable;
-using tthread::lock_guard;
-using tthread::atomic;
-using tthread::this_thread::sleep_for;
-using tthread::this_thread::yield;
-using tthread::chrono::milliseconds;
-/* Since TinyThread fast mutexes are occasionally desired, we're
- * adding them as well...
- */
-#include "fast_mutex.h"
-using tthread::fast_mutex;
-#elif defined(USE_BOOST)
-/*
- * If Boost was defined and the user didn't specify TinyThread++, we should use it instead-
- * not everyone wants/needs to use C++11.  As this is intended to simplify development
- * on a wide range of targets which may not have compatible/compliant compilers for
- * C++11 or beyond.
- */
-#include <boost/thread.hpp>
-using boost::thread;
-using boost::mutex;
-using boost::recursive_mutex;
-using boost::condition_variable;
-using boost::lock_guard;
-using boost::atomic;
-using boost::this_thread::sleep_for;
-using boost::this_thread::yield;
-using boost::chrono::milliseconds;
-#else
 #include <thread>
 #include <mutex>
 #include <condition_variable>
@@ -123,7 +73,6 @@ using std::atomic;
 using std::this_thread::sleep_for;
 using std::this_thread::yield;
 using std::chrono::milliseconds;
-#endif
 
 #include <NONCOPY.hpp>
 
@@ -345,7 +294,6 @@ private:
 
 };
 
-#endif // RUNABLE_H
 
 
 

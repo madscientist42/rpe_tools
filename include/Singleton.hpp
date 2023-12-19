@@ -49,38 +49,19 @@
  *
  */
 
-#ifndef SINGLETON_HPP_
-#define SINGLETON_HPP_
+#pragma once
 
-#include <cassert>
-
-#if defined(USE_TINYTHREAD)
-#include <tinythread.h>
-using tthread::mutex;
-using tthread::lock_guard;
-using tthread::atomic_thread_fence;
-using tthread::memory_order_acquire;
-using tthread::memory_order_release;
-#elif defined (USE_BOOST)
-#include <boost/thread/mutex.hpp>
-using boost::mutex;
-using boost::lock_guard;
-#include <boost/atomic.hpp>
-using boost::atomic_thread_fence;
-using boost::memory_order_acquire;
-using boost::memory_order_release;
-#else
+#include <thread>
 #include <mutex>
 using std::mutex;
 using std::lock_guard;
 using std::atomic_thread_fence;
 using std::memory_order_acquire;
 using std::memory_order_release;
-#endif
 
 #include <NONCOPY.hpp>
 
-template<class T> class Singleton : public NONCOPY 
+template<class T> class Singleton : public NONCOPY
 {
 public:
 	Singleton() {}
@@ -98,8 +79,6 @@ public:
 	static T* GetInstance()
 	{
 		static T *instance = NULL;
-
-		assert(!is_destructed);
 
 		(void)is_destructed; // prevent removing is_destructed in Release configuration
 		(void)is_constructed; // prevent removing is_constructed in Release configuration
@@ -142,5 +121,3 @@ template<class T>
 bool Singleton<T>::is_destructed = (Singleton<T>::GetMutex(), false);
 template<class T>
 bool Singleton<T>::is_constructed = (Singleton<T>::GetMutex(), false);
-
-#endif /* SINGLETON_HPP_ */

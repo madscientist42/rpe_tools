@@ -7,9 +7,7 @@ set(EXECUTABLE_OUTPUT_PATH deploy)
 set(LIBRARY_OUTPUT_PATH deploy)
 
 # Define some knobs that the users will want out of us...
-option(USE_TINYTRHEAD "Turn on included TinyThread++ support instead of the native C++11 support" FALSE)
 option(BUILD_DYNAMIC "Turn on dynamic (.so) building" TRUE)
-option(USE_BOOST "Turn on BOOST support" TRUE)
 
 # Define the library's components...  Unless you're using TinyThread++
 # or one of the piece-parts that is not pure header definition, you
@@ -27,37 +25,9 @@ if(PROVIDE_SysFSGPIO)
 	set(LIBRARY_SOURCES ${LIBRARY_SOURCES} src/SysFSGPIO.cpp)
 endif(PROVIDE_SysFSGPIO)
 
-# Force C++ 11 support if you don't have USE_BOOST 
-# turned on- the library can work with it, but you 
-# don't need it if BOOST is leveraged.
-if (NOT USE_BOOST)
-	set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
-endif (NOT USE_BOOST)
 
 # Set the ground rules for files being linked, as needed...
 find_package (Threads)
-
-# Check CMake settings- if the developer sets one of the options, we
-# want to adjust the parameters...
-if(USE_TINYTRHEAD)
-    # Add TinyThread++ support to the library and tell the compiler to
-    # use it in the build
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_TINYTHREAD")
-    set(LIBRARY_SOURCES ${LIBRARY_SOURCES} src/tinythread.cpp)
-endif(USE_TINYTRHEAD)
-if(USE_BOOST)
-    # Tell the compiler that BOOST has been specified.  As needed,
-    # add it to the .so build as a link target.  Currently, only
-    # a couple of things use BOOST. 
-    find_package(Boost COMPONENTS system thread atomic chrono REQUIRED)    
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_BOOST")
-    list(APPEND TEST_APP_LIBS ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_ATOMIC_LIBRARY} ${Boost_CHRONO_LIBRARY})    
-endif(USE_BOOST)
-if (NOT(USE_BOOST) AND NOT(USE_TINYTHREAD))
-    # Force C++11 standard compliance if it's not turned on. 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-endif (NOT(USE_BOOST) AND NOT(USE_TINYTHREAD))
-  
 
 # Set up the library proper...
 if(BUILD_DYNAMIC)

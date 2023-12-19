@@ -48,24 +48,10 @@
 #ifndef _SHAREDREFERENCE_HPP_
 #define _SHAREDREFERENCE_HPP_
 
-#if defined(USE_BOOST)
-/* For most things, BOOST makes sense- but if you don't have BOOST
- * on the target and don't have C++11 support for at least shared_ptr
- * this won't work for you (Obvious, considering that it's an
- * encapsulation of that concept extended to acting largely like a
- * reference that shields you against most container classes, esp.
- * STL.
- */
-#include <boost/shared_ptr.hpp>
-using boost::shared_ptr;
-#include <boost/utility/addressof.hpp>
-using boost::addressof;
-#else
-// NOTE: This requires C++11 compliance in your compiler to use this configuration.
+// NOTE: This *requires* C++11 compliance in your compiler to use this configuration.
 #include <memory>
 using std::shared_ptr;
 using std::addressof;
-#endif
 
 #include <queue>
 using std::queue;
