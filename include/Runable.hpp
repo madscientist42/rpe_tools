@@ -2,7 +2,7 @@
  * Runable.h
  *
  * This is a simplistic base class to provide some, but not all of the
- * functionality of Java's "Runnable" interface.  It utilizes a C++ 11
+ * functionality of Java's "Runable" interface.  It utilizes a C++ 11
  * Standard model/semantic and operates off of the semantics of the same.
  * We provide, as part of the implementation, the ability to use TinyThread
  * or Boost::thread instead of the stdc++ implementation, in the event
@@ -84,8 +84,8 @@ using std::chrono::milliseconds;
  * 		- This class is a *thin* encapsulation shim around the C++11
  * 		  standard thread framework or a compatible implementation of the same.
  * 		  (See TinyThread++...which is just that under a BSD license...)
- * 		- This class creates a "Runnable" object with ::run() as the thread
- * 		  loop method.  This is the same base semantics as the Java Runnable interface
+ * 		- This class creates a "Runable" object with ::run() as the thread
+ * 		  loop method.  This is the same base semantics as the Java Runable interface
  * 		  or the Thread Class (for C++ the concepts lean towards the interface, but...).
  * 		- This allows us to make autonomous modules that can be standalone
  * 		  applications or submodules inside of a main control daemon...
@@ -96,11 +96,11 @@ using std::chrono::milliseconds;
  */
 
 
-class Runnable : public NONCOPY
+class Runable : public NONCOPY
 {
 public:
-	Runnable() : _thread(NULL), _run(false) {} ;
-    virtual ~Runnable()
+	Runable() : _thread(NULL), _run(false) {} ;
+    virtual ~Runable()
     {
     	try
     	{
@@ -110,7 +110,7 @@ public:
     	}
     	catch(std::exception& e)
     	{
-    		printf("Runnable : %s\n", e.what());
+    		printf("Runable : %s\n", e.what());
     	}
     }
 
@@ -150,20 +150,20 @@ public:
     	    	}
     	    	catch(std::exception& e)
     	    	{
-    	    		printf("Runnable : %s\n", e.what());
+    	    		printf("Runable : %s\n", e.what());
     	    	}
     		}
-    		_thread = new thread(&Runnable::runThread, this);
+    		_thread = new thread(&Runable::runThread, this);
     	}
     	catch (std::exception& e)
     	{
-    		printf("Runnable : %s\n", e.what());
+    		printf("Runable : %s\n", e.what());
     	}
     }
 
     // The Java Thread class exposes sleep() as a method with the milliseconds
     // slept as the passed in parameter.  While it's not strictly part of
-    // the Runnable interface, we're providing it so that the semantics are
+    // the Runable interface, we're providing it so that the semantics are
     // there and a developer doesn't have to think about, "Am I on Windows or Linux?"
     // or the like and having to figure out how to get the right behavior...  We don't
     // do the other version that does (msec, nsec) right at this time because
@@ -188,9 +188,9 @@ public:
     // threading interfaces...
     static void runThread(void *arg)
     {
-    	((Runnable *)arg)->_run = true;
-    	((Runnable *)arg)->run();
-    	((Runnable *)arg)->_run = false;
+    	((Runable *)arg)->_run = true;
+    	((Runable *)arg)->run();
+    	((Runable *)arg)->_run = false;
     }
 
     bool isRunning (void ) {return _run;}
@@ -204,8 +204,8 @@ protected:
 };
 
 /*
- * This is, sort-of, a "simplification" of the Runnable class.  It possesses
- * many of the same requirements as a Runnable, but unlike a Runnable,
+ * This is, sort-of, a "simplification" of the Runable class.  It possesses
+ * many of the same requirements as a Runable, but unlike a Runable,
  * it's dynamic allocation only, and once ::start() is ran, the ownership
  * of the memory allocation associated with the parent and any children
  * automatically becomes the OneShot's as it *self-destructs* on completion
@@ -219,7 +219,7 @@ protected:
  *
  * As a result, one should avoid using a forever loop in the run()
  * redefinition unless it actually absolutely makes sense (most of the
- * time this won't do so- use Runnable instead!)- you'll have a detached
+ * time this won't do so- use Runable instead!)- you'll have a detached
  * thread with mostly NO control over it unless you've got some messaging
  * in place to give it the hint that it needs to die.
  *
@@ -237,7 +237,7 @@ protected:
  * be used fairly sparingly...while it's a solid solution for a small
  * set of problems, it's not exactly what one would call safe for
  * larger use for obvious reasons.  If you're not in the proper context
- * here, USE Runnable INSTEAD.
+ * here, USE Runable INSTEAD.
  *
  */
 class OneShot : public NONCOPY
@@ -290,7 +290,7 @@ protected:
     }
 
 private:
-    thread *_thread;	// Unlike Runnable, we don't want the ability for children to see this.
+    thread *_thread;	// Unlike Runable, we don't want the ability for children to see this.
 
 };
 

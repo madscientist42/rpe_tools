@@ -49,7 +49,7 @@
 #if defined(__linux__)
 
 #include <NONCOPY.hpp>
-#include <Runnable.hpp>
+#include <Runable.hpp>
 #include <unistd.h>
 
 #include <functional>
@@ -89,7 +89,7 @@ typedef enum
 typedef function<void(Value, void*)> CallbackFunction;
 
 
-class SysFSGPIO: public Runnable
+class SysFSGPIO: public Runable
 {
 public:
 	// Having to make a default constructor- if you want to use SharedReference,

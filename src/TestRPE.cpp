@@ -1,6 +1,6 @@
 //#define USE_TINYTHREAD
 
-#include <Runnable.hpp>
+#include <Runable.hpp>
 #include <Singleton.hpp>
 #include <stdio.h>
 #include <poll.h>
@@ -32,7 +32,7 @@ private:
 	int _count;
 };
 
-class ThreadTest : public Runnable
+class ThreadTest : public Runable
 {
 public:
 	ThreadTest(int stride) { _stride = stride; };
