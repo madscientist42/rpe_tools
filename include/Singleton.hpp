@@ -53,6 +53,7 @@
 
 #include <thread>
 #include <mutex>
+#include <atomic>
 using std::mutex;
 using std::lock_guard;
 using std::atomic_thread_fence;
