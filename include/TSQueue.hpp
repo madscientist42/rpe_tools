@@ -29,6 +29,16 @@ template <typename T> class TSQueue {
             queue.pop();
         };
 
+        bool empty()
+        {
+            return queue.empty();
+        }
+
+        size_t size()
+        {
+            return queue.size();
+        }
+
     private: 
         std::mutex mutex;
         std::condition_variable cond_var;
