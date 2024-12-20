@@ -1,13 +1,13 @@
+#pragma once
+
 #include <thread>
 #include <condition_variable>
 #include <queue>
 
-#pragma once
-
 // Implement a fairly proper threadsafe queue...
 template <typename T> class TSQueue {
     public:
-        void push(const T& item) 
+        void push(const T& item)
         {
             {
                 std::lock_guard lock(mutex);
@@ -17,14 +17,14 @@ template <typename T> class TSQueue {
             cond_var.notify_one();
         };
 
-        T& front() 
+        T& front()
         {
             std::unique_lock lock(mutex);
             cond_var.wait(lock, [&]{ return !queue.empty(); });
             return queue.front();
         };
 
-        void pop() 
+        void pop()
         {
             std::lock_guard lock(mutex);
             queue.pop();
@@ -40,7 +40,7 @@ template <typename T> class TSQueue {
             return queue.size();
         }
 
-    private: 
+    private:
         std::mutex mutex;
         std::condition_variable cond_var;
         std::queue<T> queue;
