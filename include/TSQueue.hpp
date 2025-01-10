@@ -10,7 +10,7 @@ template <typename T> class TSQueue {
         /**
          * Constructor
          */
-        TSQueue(size_t size = 512, bool blocking = true) : m_blocking(false), m_size(size) {};
+        TSQueue(size_t size = 512, bool blocking = true) : m_blocking(blocking), m_size(size) {};
 
         /**
          * Adds an item to the end of the queue.
@@ -23,12 +23,14 @@ template <typename T> class TSQueue {
         {
             {
                 std::lock_guard lock(mutex);
+
                 if (queue.size() >= m_size)
                 {
                     if (m_blocking)
                     {
                         // Wait until there is room
-                        cond_var.wait(lock, [&]{ return queue.size() < m_size; });
+                        std::unique_lock wait_lock(mutex);
+                        cond_var.wait(wait_lock, [&]{ return queue.size() < m_size; });
                     }
                     else
                     {
