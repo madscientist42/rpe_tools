@@ -62,6 +62,22 @@
 
 #include <POpen.hpp>
 
+/**
+ * Executes a shell command in a child process, establishing dual-pipe
+ * communication for input and output.
+ *
+ * This function sets up pipes for inter-process communication, forks a child
+ * process, and executes the provided shell command in the child process. The
+ * parent process can then communicate with the child using the established
+ * pipes.
+ *
+ * @param command The shell command to be executed.
+ * @return 0 on successful execution, -EIO on failure.
+ *
+ * Note: The function assumes that the command will be executed using the
+ * system's default shell, typically /bin/sh.
+ */
+
 int POpen::run_command(string command)
 {
 	int		retVal = -EIO;
@@ -152,6 +168,15 @@ int POpen::run_command(string command)
 };
 
 
+/**
+ * Close this POpen object.
+ *
+ * This method waits for the subprocess to end and then releases any
+ * resources associated with the object. If the subprocess is no longer
+ * running, then the method returns immediately.
+ *
+ * @return 0 if successful, -1 if an error occurred.
+ */
 int POpen::close(void)
 {
     int 	pstat;
@@ -170,6 +195,13 @@ int POpen::close(void)
     return (pid == -1 ? -1 : pstat);
 }
 
+/**
+ * Reset this POpen object to its initial state.
+ *
+ * This method is used to reset this object to its initial state,
+ * ready for a new call to open(). It will quietly fail if there
+ * is no child process present.
+ */
 void POpen::reset(void)
 {
 	// Do a reap pass.  This will quietly fail if there's no
@@ -178,12 +210,33 @@ void POpen::reset(void)
 	close();
 }
 
+/**
+ * Kill the Child process.
+ *
+ * This method kills the Child process using the kill(1) command with the
+ * signal -9. This is a largely portable way to kill a process, but it
+ * is not guaranteed to work on all platforms.
+ *
+ * @return 0 if the kill command was successful, otherwise non-zero.
+ */
 int POpen::kill(void)
 {
 	// Largely portable way to issue a kill to the Child.
 	sprintf(_sys_cmd, "kill -9 %d", _pid);
 	return system(_sys_cmd);
 }
+
+/**
+ * Terminate the Child process.
+ *
+ * This method sends a SIGTERM signal to the Child process, requesting
+ * it to terminate gracefully. The SIGTERM signal allows the process
+ * to perform cleanup operations before shutting down. However, it is
+ * not guaranteed that the process will terminate immediately, as it
+ * may choose to ignore or handle the signal.
+ *
+ * @return 0 if the terminate command was successful, otherwise non-zero.
+ */
 
 int POpen::terminate(void)
 {
@@ -192,6 +245,18 @@ int POpen::terminate(void)
 	return system(_sys_cmd);
 }
 
+/**
+ * Check to see if the child process is running.
+ *
+ * This method checks to see if the child process is still running.
+ * It does this by performing a waitpid() call with the WNOHANG flag
+ * set, which allows it to check the status of the child process
+ * without blocking. If the waitpid() call returns 0, then the child
+ * process is still running. If it returns a non-zero value, then
+ * the child process has terminated.
+ *
+ * @return true if the child process is running, false otherwise.
+ */
 bool POpen::isRunning(void)
 {
 	// Check to see if we know that the child process is running...
@@ -199,6 +264,14 @@ bool POpen::isRunning(void)
 	return (waitpid(_pid, &status, WNOHANG) == 0) ? true : false;
 }
 
+/**
+ * Reset all the process related values to their initial state.
+ *
+ * This method closes all the file descriptors and file pointers associated
+ * with the child process and resets all the member variables to their initial
+ * state. It is used by the constructors and destructors of this class to
+ * ensure that the class is always properly initialized.
+ */
 void POpen::init_process_values(void)
 {
 	if (_readFd > -1)
@@ -221,6 +294,14 @@ void POpen::init_process_values(void)
 	_readFp = _writeFp = NULL;
 }
 
+/**
+ * Close a pipe.
+ *
+ * This method takes a pointer to a set of two file descriptors that
+ * represent a pipe and closes both of them.
+ *
+ * @param pipeset pointer to a set of two file descriptors.
+ */
 void POpen::close_pipe(int *pipeset)
 {
 	::close(pipeset[READ]);

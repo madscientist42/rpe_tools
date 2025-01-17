@@ -2,10 +2,10 @@
  * Singleton.hpp
  *
  * A simplified, largely safe singleton template class.  Uses
- * std::lock_guard (Or, functional equivalent such as from TinyThread++)
- * container to enforce single instance creation at construction time
- * such that if someone attempts to bind to this, it is held off until
- * the class or it's children are constructed with a single global instance.
+ * std::lock_guard container to enforce single instance creation
+ * semantics at construction time such that if someone attempts to
+ * bind to this, it is held off until the class or it's children
+ are constructed with a single global instance.
  *
  * This enforces proper singleton semantics and is effectively thread safe.
  *
@@ -65,7 +65,16 @@ using std::memory_order_release;
 template<class T> class Singleton : public NONCOPY
 {
 public:
+    /// Default constructor
 	Singleton() {}
+
+	/// Destructor.
+	///
+	/// This destructor is responsible for cleaning up the singleton after it's been
+	/// constructed.  It is necessary because the instance is static and the C++ runtime
+	/// will not call the destructor for static objects.  It is also necessary because the
+	/// destructor is responsible for deleting the singleton instance.  See the comments
+	/// in the implementation for more details.
 	~Singleton()
 	{
 		is_destructed = true;
@@ -75,8 +84,22 @@ public:
 		}
 	}
 
+    /// Returns true if the instance has been constructed and false otherwise
 	static bool isConstructed() { return is_constructed; }
 
+    /**
+     * Retrieves the singleton instance of type T.
+     *
+     * This method employs a thread-safe mechanism to ensure that the singleton instance
+     * is created only once during the program's lifetime. It utilizes a double-checked
+     * locking pattern combined with memory fences to synchronize access across multiple
+     * threads. If the instance is not yet created, a mutex is used to lock the critical
+     * section, ensuring only one thread can allocate and construct the instance. Once
+     * created, the instance is returned for subsequent calls, ensuring consistent and
+     * efficient access.
+     *
+     * @return A pointer to the singleton instance of type T.
+     */
 	static T* GetInstance()
 	{
 		static T *instance = NULL;
@@ -106,6 +129,13 @@ private:
 	static bool is_destructed;
 	static bool is_constructed;
 
+    /*
+    * Returns the mutex used to synchronize access to the singleton instance.
+    *
+    * This natty bit of code is used here to make the compiler do this the, "right" way without
+    * us having to worry about a C/C++ file to drop the static instance into.  Definition makes
+    * it simply happen as a header-only affair.
+    */
 	static mutex& GetMutex()
 	{
 		static mutex _mutex;

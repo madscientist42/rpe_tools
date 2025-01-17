@@ -61,6 +61,20 @@ const std::string SysFSGPIO::_sysfsPath("/sys/class/gpio/");
 const ssize_t MAX_BUF = 2;
 
 
+/**
+ * Default constructor for the SysFSGPIO class.
+ *
+ * Initializes a SysFSGPIO object with default values:
+ * - _id: 0
+ * - _id_str: an empty string
+ * - _direction: Direction::NO_DIR
+ * - _edge: Edge::NONE
+ * - _fd: -1 (indicating no file descriptor is open)
+ * - _data: NULL (no user data associated)
+ * - _activeLow: false (active-high logic level)
+ * - _doTeardown: true (indicating that cleanup should be performed on destruction)
+ */
+
 SysFSGPIO::SysFSGPIO() :
 		_id(0),
 		_id_str(""),
@@ -73,6 +87,19 @@ SysFSGPIO::SysFSGPIO() :
 {
 }
 
+/**
+ * Constructor that sets up a SysFSGPIO object with a specific ID and direction, and
+ * optionally sets the pin to active-low logic level.
+ *
+ * This constructor sets up a SysFSGPIO object with the specified @a id and @a direction,
+ * and optionally sets the pin to active-low logic level. It also sets up the GPIO
+ * for use.
+ *
+ * @param id The GPIO ID to use.
+ * @param direction The direction of the GPIO.  May be either IN or OUT.
+ * @param useActiveLow Set to true if the pin should be treated as an active-low
+ *                     logic level.
+ */
 SysFSGPIO::SysFSGPIO(uint16_t id, Direction direction, bool useActiveLow) :
 		_id(id),
 		_id_str(std::to_string(id)),
@@ -87,6 +114,23 @@ SysFSGPIO::SysFSGPIO(uint16_t id, Direction direction, bool useActiveLow) :
 	exportGPIO();
 }
 
+/**
+ * Constructor that sets up a SysFSGPIO object with a specific ID, edge detection,
+ * and a callback function. This constructor initializes a SysFSGPIO object with
+ * the specified @a id, @a edge, @a callback, and @a data. The GPIO is configured
+ * for input with the specified edge detection behavior and optionally set to
+ * active-low logic level. It also starts a thread to handle edge-triggered events.
+ *
+ * @param id The GPIO ID to use.
+ * @param edge The edge type for triggering callbacks. Must not be Edge::NONE.
+ * @param callback The function to call when an edge is detected.
+ * @param data User-defined data to be passed to the callback function.
+ * @param useActiveLow Set to true if the pin should be treated as an active-low
+ *                     logic level.
+ * @throws std::runtime_error If no edge is specified, if setting the edge behavior
+ *         fails, or if the GPIO value file cannot be opened.
+ */
+
 SysFSGPIO::SysFSGPIO(uint16_t id, Edge edge, CallbackFunction callback, void *data, bool useActiveLow) :
 		_id(id),
 		_id_str(std::to_string(id)),
@@ -96,7 +140,7 @@ SysFSGPIO::SysFSGPIO(uint16_t id, Edge edge, CallbackFunction callback, void *da
 		_callback(callback),
 		_data(data),
 		_activeLow(useActiveLow),
-		_doTeardown(true)		
+		_doTeardown(true)
 {
 	char buf[MAX_BUF];
 
@@ -163,6 +207,16 @@ SysFSGPIO::SysFSGPIO(uint16_t id, Edge edge, CallbackFunction callback, void *da
 	start();
 }
 
+/*************  ✨ Codeium Command ⭐  *************/
+/**
+ * Destructor for the SysFSGPIO class.
+ *
+ * This destructor ensures that any running thread is stopped and joined,
+ * closes the file descriptor if it is open, and unexports the GPIO,
+ * cleaning up resources used by the SysFSGPIO object.
+ */
+
+/******  26733cba-4843-4557-86c7-8994b2c3f179  *******/
 SysFSGPIO::~SysFSGPIO()
 {
 	if (isRunning())
@@ -183,6 +237,16 @@ SysFSGPIO::~SysFSGPIO()
 	unexportGPIO();
 }
 
+
+/**
+ * Export the GPIO specified in the constructor, and set its direction according to that constructor.
+ * If the GPIO is already exported, do not re-export it, but do set the direction.
+ *
+ * If the GPIO's value is currently high, leave it that way.  If it is low, set it to low.  This is
+ * useful for LEDs, etc. where we want to be able to control them with multiple SysFSGPIO objects.
+ *
+ * Throw exceptions if we can't export, set direction, or set active low.
+ */
 void SysFSGPIO::exportGPIO(void)
 {
 	// We're going to check for the presence of /sys/class/gpio...
@@ -190,10 +254,10 @@ void SysFSGPIO::exportGPIO(void)
     {
        throw std::runtime_error(_sysfsPath + " does not exist.");
     }
-    
-    // Check to see if the GPIO entry was there to begin with.  We'll 
+
+    // Check to see if the GPIO entry was there to begin with.  We'll
     // set it the specified way, but if it was lit...leave it be.
-    // (This may be "wrong" but it lets us do things like LEDs, etc. 
+    // (This may be "wrong" but it lets us do things like LEDs, etc.
     // with multiple "controllers" and do them "right" all the same...)
 	if (PathExists(_sysfsPath + "gpio" + _id_str))
 	{
@@ -221,7 +285,7 @@ void SysFSGPIO::exportGPIO(void)
 			throw std::runtime_error("Unable to export GPIO(2) " + _id_str);
 		}
 	}
-	
+
     //attempt to set direction
     {
 		std::ofstream sysfs_direction(_sysfsPath + "gpio" + _id_str + "/direction", std::ofstream::app);
@@ -274,6 +338,14 @@ void SysFSGPIO::exportGPIO(void)
 }
 
 
+/**
+    * @brief Unexport GPIO
+    *
+    * Unexport the GPIO given that we exported it ourselves. This method is
+    * idempotent, so it's safe to call it multiple times.
+    *
+    * @throw std::runtime_error if unable to unexport GPIO
+    */
 void SysFSGPIO::unexportGPIO(void)
 {
     // Unexport only when we constructed it ourselves at our code level...
@@ -289,6 +361,16 @@ void SysFSGPIO::unexportGPIO(void)
 	}
 }
 
+/**
+    * @brief Get the value of the GPIO line
+    *
+    * Get the current value of the GPIO line.  If the line is set to READ
+    * and/or configured for callbacks, you're not supposed to use this
+    * function (The value is handed to you in the callback...)
+    *
+    * @return Value of the GPIO line or Value::INVALID if not set to READ
+    *         or if edge is not NONE
+    */
 Value SysFSGPIO::getValue(void)
 {
 	// Presume we're operating outside of parameters...  This would be if the GPIO is set
@@ -329,6 +411,19 @@ Value SysFSGPIO::getValue(void)
 	return retVal;
 }
 
+/**
+    * @brief Set the value of the GPIO line
+    *
+    * Set the value of the GPIO line.  If the line is set to READ and/or
+    * configured for callbacks, you're not supposed to use this function
+    * (The value is handed to you in the callback...)
+    *
+    * @param value Value to set for the GPIO line
+    *
+    * @return Value of the GPIO line that was attempted to be set if it's
+    *         valid, Value::INVALID if not set to WRITE or if edge is not
+    *         NONE
+    */
 Value SysFSGPIO::setValue(Value value)
 {
 	// Presume we're operating outside of parameters...  This would be if the GPIO is set
@@ -367,7 +462,17 @@ Value SysFSGPIO::setValue(Value value)
 }
 
 
-// Dogsbody for the callback engine...
+/**
+    * @brief Start the run loop for GPIO monitoring
+    *
+    * This member function will start a loop that will monitor the GPIO line for
+    * changes.  When a change is detected, it will call the callback function
+    * registered with the GPIO line.
+    *
+    * @note If using callbacks, you MUST call stop() to stop the loop.  If you
+    *       don't, the loop will continue to run and your program will not exit
+    *       properly.
+    */
 void SysFSGPIO::run(void)
 {
 	char buf[MAX_BUF];
@@ -422,3 +527,4 @@ void SysFSGPIO::run(void)
 		}
 	}
 }
+// Dogsbody for the callback engine...
