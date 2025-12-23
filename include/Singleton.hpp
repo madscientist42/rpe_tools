@@ -1,6 +1,7 @@
 /*
  * Singleton.hpp
  *
+<<<<<<< HEAD
  * A simplified, largely safe singleton template class.  Uses
  * std::lock_guard container to enforce single instance creation
  * semantics at construction time such that if someone attempts to
@@ -47,24 +48,23 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+=======
+ * A Thread-safe-ish Singleton class.  Redone from the original to keep the same API.
+ * This uses the Meyers model and should be intrinsically safe for most uses.  Care
+ * should be taken to avoid a dependency loop in Singletons.  This will cause you 
+ * to have a race condition in your program and therefore a segfault.
+>>>>>>> b52e304 (Cruft removal and other cleanups.)
  */
-
 #pragma once
 
-#include <thread>
-#include <mutex>
 #include <atomic>
-using std::mutex;
-using std::lock_guard;
-using std::atomic_thread_fence;
-using std::memory_order_acquire;
-using std::memory_order_release;
-
+#include <mutex>
 #include <NONCOPY.hpp>
 
 template<class T> class Singleton : public NONCOPY
 {
 public:
+<<<<<<< HEAD
     /// Default constructor
 	Singleton() {}
 
@@ -141,14 +141,20 @@ private:
 		static mutex _mutex;
 		return _mutex;
 	}
+=======
+	/// Return a pointer to the single instance of this class.
+	///
+	/// This function will return a pointer to the single instance of this class.
+	/// The instance is created on the first call to this function and is
+	/// destroyed when the program exits.  This is a thread-safe way to get
+	/// a Singleton instance of a class.
+	///
+	/// @return A pointer to the single instance of this class.
+    static T* GetInstance()
+    {
+		static T instance;
+		return &instance;
+    }
+>>>>>>> b52e304 (Cruft removal and other cleanups.)
 };
 
-// Force creating the internal mutex before main() is ever called and
-// effectively block anyone trying to grab us before construction is complete
-// on this class.  (This means you should use EXTREME care to not have
-// a Singleton's constructor relying on ANY other Singleton's GetInstance()
-// call- as this might cause a very nasty race condition)
-template<class T>
-bool Singleton<T>::is_destructed = (Singleton<T>::GetMutex(), false);
-template<class T>
-bool Singleton<T>::is_constructed = (Singleton<T>::GetMutex(), false);

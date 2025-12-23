@@ -101,6 +101,7 @@ class Runable : public NONCOPY
 public:
     /// Default constructor
 	Runable() : _thread(NULL), _run(false) {} ;
+<<<<<<< HEAD
 
 	/**
 	 * ~Runable()
@@ -114,6 +115,16 @@ public:
 	 * If an exception is thrown during the destruction process,
 	 * the same exception is re-thrown after printing a message
 	 * that indicates where the exception was thrown.
+=======
+	
+
+	/**
+	 * Destructor for the Runable class.
+	 *
+	 * This destructor is special because it tries to clean up after a thread
+	 * that was created by the Runable class.  If an exception is thrown
+	 * during the cleanup process, catch it and print the error message.
+>>>>>>> b52e304 (Cruft removal and other cleanups.)
 	 */
     virtual ~Runable()
     {
@@ -127,8 +138,9 @@ public:
     	{
     		printf("Runable : %s\n", e.what());
     	}
-    }
+    };
 
+<<<<<<< HEAD
     /**
      * join()
      *
@@ -137,6 +149,14 @@ public:
      * currently running, or if it is not joinable, this method
      * does nothing.
      */
+=======
+	/**
+	 * Joins the thread object.
+	 *
+	 * This function will join the thread object to the main thread if it is joinable.
+	 * If the thread is not joinable, this function does nothing.
+	 */
+>>>>>>> b52e304 (Cruft removal and other cleanups.)
     void join()
     {
     	if (_thread != NULL)
@@ -146,8 +166,9 @@ public:
     			_thread->join();
     		}
     	}
-    }
+    };
 
+<<<<<<< HEAD
     /**
      * detach()
      *
@@ -156,14 +177,23 @@ public:
      * is not currently running, or if it is not detachable, this
      * method does nothing.
      */
+=======
+	/**
+	 * Detaches the thread object from the main thread.
+	 *
+	 * This function will detach the thread object from the main thread if it is joinable.
+	 * If the thread is not joinable, this function does nothing.
+	 */
+>>>>>>> b52e304 (Cruft removal and other cleanups.)
     void detach()
     {
     	if (_thread != NULL)
     	{
     		_thread->detach();
     	}
-    }
+    };
 
+<<<<<<< HEAD
     /**
      * stop()
      *
@@ -181,6 +211,32 @@ public:
      * it will first be stopped and then restarted.  If the thread is
      * not joinable, this method does nothing.
      */
+=======
+	/**
+	 * @brief Stop the thread.
+	 *
+	 * @details Causes the thread to stop.  
+	 */
+    virtual void stop() 
+	{ 
+		// Cooperatively tell the thread to stop by setting the flag false- we're
+		// no longer running.  This is VIRTUAL so that you can add additional 
+		// stop conditions on the derived class like closing sockets, etc. so
+		// that if you're in a blocked state (Something LIKELY...) you can stop
+		// the silly thing by yanking the carpet out from underneath the loop to
+		// actually see this change in real or near real-time and properly bail.
+		_run = false; 
+	};
+
+	/**
+	 * Starts the thread object.
+	 *
+	 * This function will start a new thread if one does not already exist.  If a thread
+	 * already exists, it will stop the thread, join it, and delete it before starting a
+	 * new one.  If an exception is thrown during the cleanup or startup process,
+	 * catch it and print the error message.
+	 */
+>>>>>>> b52e304 (Cruft removal and other cleanups.)
     void start()
     {
     	try
@@ -205,7 +261,7 @@ public:
     	{
     		printf("Runable : %s\n", e.what());
     	}
-    }
+    };
 
     /**
      * sleep()
@@ -219,7 +275,7 @@ public:
     void sleep(int msDuration)
     {
     	sleep_for(milliseconds(msDuration));
-    }
+    };
 
     /**
      * yield()
@@ -253,8 +309,9 @@ public:
     	((Runable *)arg)->_run = true;
     	((Runable *)arg)->run();
     	((Runable *)arg)->_run = false;
-    }
+    };
 
+<<<<<<< HEAD
     /**
      * isRunning(void)
      *
@@ -262,6 +319,9 @@ public:
      * is currently running.
      */
     bool isRunning (void ) {return _run;}
+=======
+    bool isRunning (void ) { return _run; };
+>>>>>>> b52e304 (Cruft removal and other cleanups.)
 
 protected:
     thread *		_thread;
@@ -309,7 +369,8 @@ protected:
  * be used fairly sparingly...while it's a solid solution for a small
  * set of problems, it's not exactly what one would call safe for
  * larger use for obvious reasons.  If you're not in the proper context
- * here, USE Runable INSTEAD.
+ * here, USE Runable INSTEAD.  This is to keep you from making immortal
+ * threads that you can't kill easily.
  *
  */
 class OneShot : public NONCOPY
