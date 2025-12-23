@@ -100,6 +100,15 @@ class Runable : public NONCOPY
 {
 public:
 	Runable() : _thread(NULL), _run(false) {} ;
+	
+
+	/**
+	 * Destructor for the Runable class.
+	 *
+	 * This destructor is special because it tries to clean up after a thread
+	 * that was created by the Runable class.  If an exception is thrown
+	 * during the cleanup process, catch it and print the error message.
+	 */
     virtual ~Runable()
     {
     	try
@@ -112,8 +121,14 @@ public:
     	{
     		printf("Runable : %s\n", e.what());
     	}
-    }
+    };
 
+	/**
+	 * Joins the thread object.
+	 *
+	 * This function will join the thread object to the main thread if it is joinable.
+	 * If the thread is not joinable, this function does nothing.
+	 */
     void join()
     {
     	if (_thread != NULL)
@@ -123,18 +138,46 @@ public:
     			_thread->join();
     		}
     	}
-    }
+    };
 
+	/**
+	 * Detaches the thread object from the main thread.
+	 *
+	 * This function will detach the thread object from the main thread if it is joinable.
+	 * If the thread is not joinable, this function does nothing.
+	 */
     void detach()
     {
     	if (_thread != NULL)
     	{
     		_thread->detach();
     	}
-    }
+    };
 
-    void stop() { _run = false; join(); }
+	/**
+	 * @brief Stop the thread.
+	 *
+	 * @details Causes the thread to stop.  
+	 */
+    virtual void stop() 
+	{ 
+		// Cooperatively tell the thread to stop by setting the flag false- we're
+		// no longer running.  This is VIRTUAL so that you can add additional 
+		// stop conditions on the derived class like closing sockets, etc. so
+		// that if you're in a blocked state (Something LIKELY...) you can stop
+		// the silly thing by yanking the carpet out from underneath the loop to
+		// actually see this change in real or near real-time and properly bail.
+		_run = false; 
+	};
 
+	/**
+	 * Starts the thread object.
+	 *
+	 * This function will start a new thread if one does not already exist.  If a thread
+	 * already exists, it will stop the thread, join it, and delete it before starting a
+	 * new one.  If an exception is thrown during the cleanup or startup process,
+	 * catch it and print the error message.
+	 */
     void start()
     {
     	try
@@ -159,7 +202,7 @@ public:
     	{
     		printf("Runable : %s\n", e.what());
     	}
-    }
+    };
 
     // The Java Thread class exposes sleep() as a method with the milliseconds
     // slept as the passed in parameter.  While it's not strictly part of
@@ -171,7 +214,7 @@ public:
     void sleep(int msDuration)
     {
     	sleep_for(milliseconds(msDuration));
-    }
+    };
 
     // Provide the notion of yield() in the class as a convenience method.
     //
@@ -191,9 +234,9 @@ public:
     	((Runable *)arg)->_run = true;
     	((Runable *)arg)->run();
     	((Runable *)arg)->_run = false;
-    }
+    };
 
-    bool isRunning (void ) {return _run;}
+    bool isRunning (void ) { return _run; };
 
 protected:
     thread *		_thread;
@@ -237,7 +280,8 @@ protected:
  * be used fairly sparingly...while it's a solid solution for a small
  * set of problems, it's not exactly what one would call safe for
  * larger use for obvious reasons.  If you're not in the proper context
- * here, USE Runable INSTEAD.
+ * here, USE Runable INSTEAD.  This is to keep you from making immortal
+ * threads that you can't kill easily.
  *
  */
 class OneShot : public NONCOPY
