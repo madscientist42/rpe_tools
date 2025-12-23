@@ -63,10 +63,13 @@ using std::this_thread::yield;
 class AtomicMtx : public NONCOPY
 {
     public:
+        /// Default constructor.
         AtomicMtx() : flag(ATOMIC_FLAG_INIT) {};
-        // Test and set the lock to be true.  If we had it already set, we didn't get
-        // the lock.  You only get to lock this *ONCE*- no reacquistion of this lock.
+
+        /// Locks the mutex.
         void lock() { while (flag.test_and_set(std::memory_order_acquire)) { yield(); }; };
+
+        /// Unlocks the mutex.
         void unlock() { flag.clear(); };
 
     private:

@@ -99,7 +99,33 @@ using std::chrono::milliseconds;
 class Runable : public NONCOPY
 {
 public:
+    /// Default constructor
 	Runable() : _thread(NULL), _run(false) {} ;
+<<<<<<< HEAD
+
+	/**
+	 * ~Runable()
+	 *
+	 * This virtual destructor is responsible for cleaning up
+	 * resources associated with this Runable object.  It is
+	 * the only place where the stop() and join() methods are
+	 * called -- and it is the only place where the underlying
+	 * C++ thread object is deleted.
+	 *
+	 * If an exception is thrown during the destruction process,
+	 * the same exception is re-thrown after printing a message
+	 * that indicates where the exception was thrown.
+=======
+	
+
+	/**
+	 * Destructor for the Runable class.
+	 *
+	 * This destructor is special because it tries to clean up after a thread
+	 * that was created by the Runable class.  If an exception is thrown
+	 * during the cleanup process, catch it and print the error message.
+>>>>>>> b52e304 (Cruft removal and other cleanups.)
+	 */
     virtual ~Runable()
     {
     	try
@@ -112,8 +138,25 @@ public:
     	{
     		printf("Runable : %s\n", e.what());
     	}
-    }
+    };
 
+<<<<<<< HEAD
+    /**
+     * join()
+     *
+     * This method will block until the thread owned by this
+     * Runable object is finished.  If the thread is not
+     * currently running, or if it is not joinable, this method
+     * does nothing.
+     */
+=======
+	/**
+	 * Joins the thread object.
+	 *
+	 * This function will join the thread object to the main thread if it is joinable.
+	 * If the thread is not joinable, this function does nothing.
+	 */
+>>>>>>> b52e304 (Cruft removal and other cleanups.)
     void join()
     {
     	if (_thread != NULL)
@@ -123,18 +166,77 @@ public:
     			_thread->join();
     		}
     	}
-    }
+    };
 
+<<<<<<< HEAD
+    /**
+     * detach()
+     *
+     * This method will detach the underlying thread object associated
+     * with this Runable object from the calling thread.  If the thread
+     * is not currently running, or if it is not detachable, this
+     * method does nothing.
+     */
+=======
+	/**
+	 * Detaches the thread object from the main thread.
+	 *
+	 * This function will detach the thread object from the main thread if it is joinable.
+	 * If the thread is not joinable, this function does nothing.
+	 */
+>>>>>>> b52e304 (Cruft removal and other cleanups.)
     void detach()
     {
     	if (_thread != NULL)
     	{
     		_thread->detach();
     	}
-    }
+    };
 
+<<<<<<< HEAD
+    /**
+     * stop()
+     *
+     * This method will cause the thread owned by this Runable object
+     * to stop.  If the thread is not currently running, or if it is
+     * not joinable, this method does nothing.
+     */
     void stop() { _run = false; join(); }
 
+    /**
+     * start()
+     *
+     * This method will start the underlying thread object associated
+     * with this Runable object.  If the thread is currently running,
+     * it will first be stopped and then restarted.  If the thread is
+     * not joinable, this method does nothing.
+     */
+=======
+	/**
+	 * @brief Stop the thread.
+	 *
+	 * @details Causes the thread to stop.  
+	 */
+    virtual void stop() 
+	{ 
+		// Cooperatively tell the thread to stop by setting the flag false- we're
+		// no longer running.  This is VIRTUAL so that you can add additional 
+		// stop conditions on the derived class like closing sockets, etc. so
+		// that if you're in a blocked state (Something LIKELY...) you can stop
+		// the silly thing by yanking the carpet out from underneath the loop to
+		// actually see this change in real or near real-time and properly bail.
+		_run = false; 
+	};
+
+	/**
+	 * Starts the thread object.
+	 *
+	 * This function will start a new thread if one does not already exist.  If a thread
+	 * already exists, it will stop the thread, join it, and delete it before starting a
+	 * new one.  If an exception is thrown during the cleanup or startup process,
+	 * catch it and print the error message.
+	 */
+>>>>>>> b52e304 (Cruft removal and other cleanups.)
     void start()
     {
     	try
@@ -159,46 +261,76 @@ public:
     	{
     		printf("Runable : %s\n", e.what());
     	}
-    }
+    };
 
-    // The Java Thread class exposes sleep() as a method with the milliseconds
-    // slept as the passed in parameter.  While it's not strictly part of
-    // the Runable interface, we're providing it so that the semantics are
-    // there and a developer doesn't have to think about, "Am I on Windows or Linux?"
-    // or the like and having to figure out how to get the right behavior...  We don't
-    // do the other version that does (msec, nsec) right at this time because
-    // it's rather specialized and only kind-of maps to the other world.
+    /**
+     * sleep()
+     *
+     * This method pauses the execution of the current thread for a specified duration.
+     * The duration is provided in milliseconds. It provides a cross-platform way to
+     * suspend thread execution, similar to Java's Thread.sleep().
+     *
+     * @param msDuration The duration in milliseconds for which the thread will be paused.
+     */
     void sleep(int msDuration)
     {
     	sleep_for(milliseconds(msDuration));
-    }
+    };
 
-    // Provide the notion of yield() in the class as a convenience method.
-    //
-    // We don't need it since it's built into C++ proper as a function
-    // call separate from the objects- but to make it more functionally
-    // similar and familiar to Java developers trying to do C++ code,
-    // we provide it as an inline here...
+    /**
+     * yield()
+     *
+     * This method causes the calling thread to yield execution to
+     * another thread.  While this is not part of the C++11 standard,
+     * it is common in C code, etc. and is offered more in a best
+     * practice manner.  If you're in a loop, you need to either block
+     * or yield so that cycles are released back to the OS.
+     */
     inline void yield(void)
     {
     	yield();
     };
 
-    // Sidestep a screwball problem with some implementations of the C++11 standard
-    // threading interfaces...
+    /**
+     * runThread(void *arg)
+     *
+     * Internal helper function for running the thread by calling the user's
+     * run() method.  This is used by the start() method to create the thread
+     * and kick off the user's run() method.
+     *
+     * @param arg The Runable object associated with this thread.
+     *
+     * @note This function is private and should not be called by the user.
+     */
     static void runThread(void *arg)
     {
+        // Sidestep a screwball problem with some implementations of the C++11 standard
+        // threading interfaces...
     	((Runable *)arg)->_run = true;
     	((Runable *)arg)->run();
     	((Runable *)arg)->_run = false;
-    }
+    };
 
+<<<<<<< HEAD
+    /**
+     * isRunning(void)
+     *
+     * This method returns true if the thread associated with this Runable
+     * is currently running.
+     */
     bool isRunning (void ) {return _run;}
+=======
+    bool isRunning (void ) { return _run; };
+>>>>>>> b52e304 (Cruft removal and other cleanups.)
 
 protected:
     thread *		_thread;
     atomic<bool> 	_run;
 
+    /*
+     * Main Loop of the class.  You should override this method to
+     * provide your own implementation of the thread loop in child classes.
+    */
     virtual void run(void) = 0;		/* We **NEVER** want someone trying to instantiate this base class */
 
 };
@@ -237,16 +369,26 @@ protected:
  * be used fairly sparingly...while it's a solid solution for a small
  * set of problems, it's not exactly what one would call safe for
  * larger use for obvious reasons.  If you're not in the proper context
- * here, USE Runable INSTEAD.
+ * here, USE Runable INSTEAD.  This is to keep you from making immortal
+ * threads that you can't kill easily.
  *
  */
 class OneShot : public NONCOPY
 {
 public:
+    /// Default constructor
 	OneShot() : _thread(NULL) {} ;
 
-    // Note: If you call start() on an instance of this, it no longer
-    // belongs to *ANYONE* except itself- this SELF-DESTRUCTS!
+    /**
+     * @brief Starts the OneShot thread.  If a thread already exists,
+     * it is deleted and a new thread is started in its place.  The
+     * thread is then arbitrarily detached.
+     *
+     * Note: If you call start() on an instance of this, it no longer
+     * belongs to *ANYONE* except itself- this SELF-DESTRUCTS!
+     *
+     * @exception std::exception Thrown if there is an error starting the thread.
+     */
     void start()
     {
     	try
@@ -273,13 +415,29 @@ public:
     	}
     }
 
-    // Sidestep a screwball problem with some implementations of the C++11 standard
-    // threading interfaces...  (Convieniently, it allows us to destroy ourselves at
-    // the end of execution of the run(); call.)
+    /**
+     * runThread(void *arg)
+     *
+     * Internal helper function for running the thread by calling the user's
+     * run() method.  This is used by the start() method to create the thread
+     * and kick off the user's run() method.
+     *
+     * @param arg The Runable object associated with this thread.
+     *
+     */
     static void runThread(void *arg) { ((OneShot *)arg)->run(); delete((OneShot *) arg); };
 
 protected:
+
+    /*
+     * Main Loop of the class.  You should override this method to
+     * provide your own implementation of the thread loop in child classes.
+    */
     virtual void run(void) = 0;		// We **NEVER** want someone trying to instantiate this class
+
+/**
+ * @brief Destructor for the OneShot class.
+ */
     virtual ~OneShot() 			    // We **NEVER** want an on-stack or global instance of this base or derivative.
     {
     	// However, we *DO* want it to clean up after itself...

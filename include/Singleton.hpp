@@ -1,11 +1,12 @@
 /*
  * Singleton.hpp
  *
+<<<<<<< HEAD
  * A simplified, largely safe singleton template class.  Uses
- * std::lock_guard (Or, functional equivalent such as from TinyThread++)
- * container to enforce single instance creation at construction time
- * such that if someone attempts to bind to this, it is held off until
- * the class or it's children are constructed with a single global instance.
+ * std::lock_guard container to enforce single instance creation
+ * semantics at construction time such that if someone attempts to
+ * bind to this, it is held off until the class or it's children
+ are constructed with a single global instance.
  *
  * This enforces proper singleton semantics and is effectively thread safe.
  *
@@ -47,25 +48,33 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+=======
+ * A Thread-safe-ish Singleton class.  Redone from the original to keep the same API.
+ * This uses the Meyers model and should be intrinsically safe for most uses.  Care
+ * should be taken to avoid a dependency loop in Singletons.  This will cause you 
+ * to have a race condition in your program and therefore a segfault.
+>>>>>>> b52e304 (Cruft removal and other cleanups.)
  */
-
 #pragma once
 
-#include <thread>
-#include <mutex>
 #include <atomic>
-using std::mutex;
-using std::lock_guard;
-using std::atomic_thread_fence;
-using std::memory_order_acquire;
-using std::memory_order_release;
-
+#include <mutex>
 #include <NONCOPY.hpp>
 
 template<class T> class Singleton : public NONCOPY
 {
 public:
+<<<<<<< HEAD
+    /// Default constructor
 	Singleton() {}
+
+	/// Destructor.
+	///
+	/// This destructor is responsible for cleaning up the singleton after it's been
+	/// constructed.  It is necessary because the instance is static and the C++ runtime
+	/// will not call the destructor for static objects.  It is also necessary because the
+	/// destructor is responsible for deleting the singleton instance.  See the comments
+	/// in the implementation for more details.
 	~Singleton()
 	{
 		is_destructed = true;
@@ -75,8 +84,22 @@ public:
 		}
 	}
 
+    /// Returns true if the instance has been constructed and false otherwise
 	static bool isConstructed() { return is_constructed; }
 
+    /**
+     * Retrieves the singleton instance of type T.
+     *
+     * This method employs a thread-safe mechanism to ensure that the singleton instance
+     * is created only once during the program's lifetime. It utilizes a double-checked
+     * locking pattern combined with memory fences to synchronize access across multiple
+     * threads. If the instance is not yet created, a mutex is used to lock the critical
+     * section, ensuring only one thread can allocate and construct the instance. Once
+     * created, the instance is returned for subsequent calls, ensuring consistent and
+     * efficient access.
+     *
+     * @return A pointer to the singleton instance of type T.
+     */
 	static T* GetInstance()
 	{
 		static T *instance = NULL;
@@ -106,19 +129,32 @@ private:
 	static bool is_destructed;
 	static bool is_constructed;
 
+    /*
+    * Returns the mutex used to synchronize access to the singleton instance.
+    *
+    * This natty bit of code is used here to make the compiler do this the, "right" way without
+    * us having to worry about a C/C++ file to drop the static instance into.  Definition makes
+    * it simply happen as a header-only affair.
+    */
 	static mutex& GetMutex()
 	{
 		static mutex _mutex;
 		return _mutex;
 	}
+=======
+	/// Return a pointer to the single instance of this class.
+	///
+	/// This function will return a pointer to the single instance of this class.
+	/// The instance is created on the first call to this function and is
+	/// destroyed when the program exits.  This is a thread-safe way to get
+	/// a Singleton instance of a class.
+	///
+	/// @return A pointer to the single instance of this class.
+    static T* GetInstance()
+    {
+		static T instance;
+		return &instance;
+    }
+>>>>>>> b52e304 (Cruft removal and other cleanups.)
 };
 
-// Force creating the internal mutex before main() is ever called and
-// effectively block anyone trying to grab us before construction is complete
-// on this class.  (This means you should use EXTREME care to not have
-// a Singleton's constructor relying on ANY other Singleton's GetInstance()
-// call- as this might cause a very nasty race condition)
-template<class T>
-bool Singleton<T>::is_destructed = (Singleton<T>::GetMutex(), false);
-template<class T>
-bool Singleton<T>::is_constructed = (Singleton<T>::GetMutex(), false);

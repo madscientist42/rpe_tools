@@ -72,7 +72,16 @@ public:
 	MessageManager() : _maxSlots(50) {};
 	virtual ~MessageManager() {};
 
-	// Size management methods...
+	/**
+	 * Sets the maximum number of slots that MessageManager will allow to
+	 * exist.  The range for this is 1 to 1500.  If the specified value is
+	 * outside this range, the call will return false.  Otherwise, the
+	 * specified value is set and the call returns true.
+	 *
+	 * @param maxSlots The new maximum number of slots.
+	 *
+	 * @return true if the maximum number of slots was set, false otherwise.
+	 */
 	bool setMaxSlots(uint32_t maxSlots)
 	{
 		if ((maxSlots > 0) && (maxSlots < 1500))
@@ -82,17 +91,35 @@ public:
 		return (_maxSlots == maxSlots);
 	};
 
+    /**
+     * Returns the maximum number of slots that MessageManager will allow to
+     * exist.
+     *
+     * @return The maximum number of slots.
+     */
 	uint32_t getMaxSlots(void) { return _maxSlots; };
 
-	// Message sending/receiving methods.
+	/**
+	 * Adds a message to a slot in the message manager's queue.
+	 *
+	 * Messages are added to the slot specified by the slot parameter.
+	 * The message manager will not allow more than getMaxSlots() slots
+	 * to be created.  If the specified slot does not exist, it will be
+	 * created if the number of slots does not exceed getMaxSlots().
+	 * If the number of slots would exceed getMaxSlots(), the call will
+	 * return false.
+	 *
+	 * If the message is successfully added, the call returns true.
+	 *
+	 * @param slot The slot to add the message to.
+	 * @param msg The message to add to the slot.
+	 *
+	 * @return true if the message was successfully added, false otherwise.
+	 */
 	bool sendMessage(int slot, const T &msg)
 	{
 		bool retVal = false;
 
-		// Note: Sending a message for a new slot adds it to the container here
-		//       so long as we don't exceed the number of slots that the
-		// 		 initializer specifies- this call will only really return false
-		// 		 when someone trys to exceed that set count.
 		if (_mailbox.size() <= _maxSlots)
 		{
 			retVal = true;
@@ -104,6 +131,19 @@ public:
 		return retVal;
 	}
 
+	/**
+	 * Retrieves a message from the message manager's queue.
+	 *
+	 * Retrieves the first message from the specified slot.  If the
+	 * slot does not exist, the call will return false.  If the slot
+	 * exists, but the message queue for that slot is empty, the call
+	 * will also return false.
+	 *
+	 * @param slot The slot to retrieve the message from.
+	 * @param msg The message retrieved from the slot.
+	 *
+	 * @return true if the message was successfully retrieved, false otherwise.
+	 */
 	bool getMessage(int slot, T &msg)
 	{
 		bool retVal = false;
@@ -121,9 +161,10 @@ public:
 				// Mutex is released as soon as we leave scope here...
 			}
 		}
+
+	    return retVal;
 	}
 
-	return retVal;
 
 private:
 	typedef queue<T> msg_queue;
@@ -137,7 +178,6 @@ private:
 
 	uint32_t 		_maxSlots;
 	mailbox			_mailbox;
-
 
 	bool		checkSlot(int slot) { return _mailbox.find(slot) != _mailbox.end(); };
 };
