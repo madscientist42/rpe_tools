@@ -101,21 +101,6 @@ class Runable : public NONCOPY
 public:
     /// Default constructor
 	Runable() : _thread(NULL), _run(false) {} ;
-<<<<<<< HEAD
-
-	/**
-	 * ~Runable()
-	 *
-	 * This virtual destructor is responsible for cleaning up
-	 * resources associated with this Runable object.  It is
-	 * the only place where the stop() and join() methods are
-	 * called -- and it is the only place where the underlying
-	 * C++ thread object is deleted.
-	 *
-	 * If an exception is thrown during the destruction process,
-	 * the same exception is re-thrown after printing a message
-	 * that indicates where the exception was thrown.
-=======
 	
 
 	/**
@@ -124,7 +109,6 @@ public:
 	 * This destructor is special because it tries to clean up after a thread
 	 * that was created by the Runable class.  If an exception is thrown
 	 * during the cleanup process, catch it and print the error message.
->>>>>>> b52e304 (Cruft removal and other cleanups.)
 	 */
     virtual ~Runable()
     {
@@ -140,23 +124,12 @@ public:
     	}
     };
 
-<<<<<<< HEAD
-    /**
-     * join()
-     *
-     * This method will block until the thread owned by this
-     * Runable object is finished.  If the thread is not
-     * currently running, or if it is not joinable, this method
-     * does nothing.
-     */
-=======
 	/**
 	 * Joins the thread object.
 	 *
 	 * This function will join the thread object to the main thread if it is joinable.
 	 * If the thread is not joinable, this function does nothing.
 	 */
->>>>>>> b52e304 (Cruft removal and other cleanups.)
     void join()
     {
     	if (_thread != NULL)
@@ -168,23 +141,12 @@ public:
     	}
     };
 
-<<<<<<< HEAD
-    /**
-     * detach()
-     *
-     * This method will detach the underlying thread object associated
-     * with this Runable object from the calling thread.  If the thread
-     * is not currently running, or if it is not detachable, this
-     * method does nothing.
-     */
-=======
 	/**
 	 * Detaches the thread object from the main thread.
 	 *
 	 * This function will detach the thread object from the main thread if it is joinable.
 	 * If the thread is not joinable, this function does nothing.
 	 */
->>>>>>> b52e304 (Cruft removal and other cleanups.)
     void detach()
     {
     	if (_thread != NULL)
@@ -193,25 +155,6 @@ public:
     	}
     };
 
-<<<<<<< HEAD
-    /**
-     * stop()
-     *
-     * This method will cause the thread owned by this Runable object
-     * to stop.  If the thread is not currently running, or if it is
-     * not joinable, this method does nothing.
-     */
-    void stop() { _run = false; join(); }
-
-    /**
-     * start()
-     *
-     * This method will start the underlying thread object associated
-     * with this Runable object.  If the thread is currently running,
-     * it will first be stopped and then restarted.  If the thread is
-     * not joinable, this method does nothing.
-     */
-=======
 	/**
 	 * @brief Stop the thread.
 	 *
@@ -236,7 +179,6 @@ public:
 	 * new one.  If an exception is thrown during the cleanup or startup process,
 	 * catch it and print the error message.
 	 */
->>>>>>> b52e304 (Cruft removal and other cleanups.)
     void start()
     {
     	try
@@ -311,17 +253,7 @@ public:
     	((Runable *)arg)->_run = false;
     };
 
-<<<<<<< HEAD
-    /**
-     * isRunning(void)
-     *
-     * This method returns true if the thread associated with this Runable
-     * is currently running.
-     */
-    bool isRunning (void ) {return _run;}
-=======
     bool isRunning (void ) { return _run; };
->>>>>>> b52e304 (Cruft removal and other cleanups.)
 
 protected:
     thread *		_thread;
